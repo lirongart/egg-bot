@@ -1,2 +1,2 @@
 #!/bin/bash
-python bot.py
+python fake_server.py
