@@ -176,16 +176,6 @@ def my_orders(message):
         bot.send_message(user_id, response)
     show_menu(user_id)
 
-def run_bot():
-    print("Bot is starting...")
-    bot.polling(none_stop=True)
-
-if __name__ == '__main__':
-    threading.Thread(target=run_bot).start()
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
-
-
-
 @bot.message_handler(func=lambda m: m.text == 'ניהול הזמנות' and m.from_user.id == ADMIN_ID)
 def manage_orders(message):
     cursor.execute('SELECT id, name, size, quantity FROM orders WHERE fulfilled = 0 ORDER BY ordered_date')
@@ -199,7 +189,6 @@ def manage_orders(message):
         response += "להשלמת הזמנה, שלח:\n/fulfill order_id כמות_שסופקה"
         bot.send_message(message.chat.id, response)
     show_menu(message.chat.id)
-
 
 @bot.message_handler(commands=['fulfill'])
 def fulfill_order(message):
@@ -233,7 +222,6 @@ def fulfill_order(message):
     except:
         bot.send_message(message.chat.id, "שימוש: /fulfill order_id כמות_שסופקה")
 
-
 @bot.message_handler(func=lambda m: m.text == 'סיכום כללי' and m.from_user.id == ADMIN_ID)
 def summary(message):
     cursor.execute('SELECT name, balance FROM users ORDER BY name')
@@ -252,3 +240,15 @@ def summary(message):
         summary_text += f'{name} - יתרה: {balance} ש"ח, בהמתנה: {spent} ש"ח, פנוי: {available} ש"ח'
     bot.send_message(message.chat.id, summary_text, parse_mode="Markdown")
     show_menu(message.chat.id)
+
+def run_bot():
+    print("Bot is starting...")
+    bot.polling(none_stop=True)
+
+if __name__ == '__main__':
+    threading.Thread(target=run_bot).start()
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+
+
+
+
