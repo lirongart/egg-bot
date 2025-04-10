@@ -168,15 +168,11 @@ def my_orders(message):
             price = 36 if size == 'L' else 39
             status = "סופק" if fulfilled else "ממתין"
             total = (f_qty if fulfilled else qty) * price
-            response += f"#{oid} - {qty} ({size}) | {status} - {total} ש"ח
-"
-            response += f"הוזמן: {ordered_at}
-"
+            response += f'#{oid} - {qty} ({size}) | {status} - {total} ש"ח'
+            response += f"הוזמן: {ordered_at}"
             if fulfilled:
-                response += f"סופק: {f_date}
-"
-            response += "
-"
+                response += f"סופק: {f_date}"
+            response += ""
         bot.send_message(user_id, response)
     show_menu(user_id)
 
