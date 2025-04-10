@@ -1,15 +1,14 @@
-# fake_server.py - Telegram Egg Bot PRO version with full admin features
 from flask import Flask
 import threading
 import telebot
 import os
 from datetime import datetime
+import psycopg2
 
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_TELEGRAM_ID", "0"))
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-import psycopg2
 conn = psycopg2.connect(DATABASE_URL)
 conn.autocommit = True
 cursor = conn.cursor()
@@ -96,10 +95,8 @@ def manage_orders(message):
     else:
         response = "הזמנות ממתינות:\n"
         for order_id, name, size, quantity in orders:
-            response += f"#{order_id} - {name}: {quantity} ({size})"
-        response += "
-להשלמת הזמנה, שלח:
-/fulfill order_id כמות_שסופקה"
+            response += f"#{order_id} - {name}: {quantity} ({size})\n"
+        response += "להשלמת הזמנה, שלח:\n/fulfill order_id כמות_שסופקה"
         bot.send_message(message.chat.id, response)
     show_menu(message.chat.id)
 
@@ -128,10 +125,10 @@ def fulfill_order(message):
         """, (qty, now, order_id))
         if refund > 0:
             cursor.execute('UPDATE users SET balance = balance + %s WHERE id = %s', (refund, user_id))
-        bot.send_message(message.chat.id, f"הזמנה #{order_id} עודכנה. חיוב סופי: {actual_total} ש"ח.")
-        bot.send_message(user_id, f"הזמנתך #{order_id} סופקה: {qty}/{ordered_qty} ({size})
+        bot.send_message(message.chat.id, f"הזמנה #{order_id} עודכנה. חיוב סופי: {actual_total} ש\"ח.")
+        bot.send_message(user_id, f"""הזמנתך #{order_id} סופקה: {qty}/{ordered_qty} ({size})
 סה"כ חיוב: {actual_total} ש"ח
-זיכוי: {refund} ש"ח")
+זיכוי: {refund} ש"ח""")
     except:
         bot.send_message(message.chat.id, "שימוש: /fulfill order_id כמות_שסופקה")
 
@@ -141,7 +138,7 @@ def summary(message):
     users = cursor.fetchall()
     cursor.execute('SELECT name, size, quantity FROM orders WHERE fulfilled = 0')
     orders = cursor.fetchall()
-    summary_text = "*סיכום מצב הקופה:*"
+    summary_text = "*סיכום מצב הקופה:*\n"
     user_orders = {}
     size_prices = {'L': 36, 'XL': 39}
     for name, size, quantity in orders:
@@ -150,8 +147,7 @@ def summary(message):
     for name, balance in users:
         spent = user_orders.get(name, 0)
         available = balance - spent
-        summary_text += f"{name} - יתרה: {balance} ש"ח, בהמתנה: {spent} ש"ח, פנוי: {available} ש"ח
-"
+        summary_text += f"{name} - יתרה: {balance} ש\"ח, בהמתנה: {spent} ש\"ח, פנוי: {available} ש\"ח\n"
     bot.send_message(message.chat.id, summary_text, parse_mode="Markdown")
     show_menu(message.chat.id)
 
