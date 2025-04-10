@@ -193,8 +193,7 @@ def manage_orders(message):
     if not orders:
         bot.send_message(message.chat.id, "אין הזמנות ממתינות.")
     else:
-        response = "הזמנות ממתינות:
-"
+        response = "הזמנות ממתינות:"
         for order_id, name, size, quantity in orders:
             response += f"#{order_id} - {name}: {quantity} ({size})\n"
         response += "להשלמת הזמנה, שלח:\n/fulfill order_id כמות_שסופקה"
@@ -227,7 +226,7 @@ def fulfill_order(message):
         )
         if refund > 0:
             cursor.execute('UPDATE users SET balance = balance + %s WHERE id = %s', (refund, user_id))
-        bot.send_message(message.chat.id, f"הזמנה #{order_id} עודכנה. חיוב סופי: {actual_total} ש"ח.")
+        bot.send_message(message.chat.id, f'הזמנה #{order_id} עודכנה. חיוב סופי: {actual_total} ש"ח.')
         bot.send_message(user_id, f"""הזמנתך #{order_id} סופקה: {qty}/{ordered_qty} ({size})
 סה"כ חיוב: {actual_total} ש"ח
 זיכוי: {refund} ש"ח""")
