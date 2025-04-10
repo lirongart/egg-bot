@@ -96,8 +96,7 @@ def manage_orders(message):
     else:
         response = "הזמנות ממתינות:\n"
         for order_id, name, size, quantity in orders:
-            response += f"#{order_id} - {name}: {quantity} ({size})
-"
+            response += f"#{order_id} - {name}: {quantity} ({size})"
         response += "
 להשלמת הזמנה, שלח:
 /fulfill order_id כמות_שסופקה"
@@ -142,8 +141,7 @@ def summary(message):
     users = cursor.fetchall()
     cursor.execute('SELECT name, size, quantity FROM orders WHERE fulfilled = 0')
     orders = cursor.fetchall()
-    summary_text = "*סיכום מצב הקופה:*
-"
+    summary_text = "*סיכום מצב הקופה:*"
     user_orders = {}
     size_prices = {'L': 36, 'XL': 39}
     for name, size, quantity in orders:
