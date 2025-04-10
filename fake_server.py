@@ -240,8 +240,7 @@ def summary(message):
     users = cursor.fetchall()
     cursor.execute('SELECT name, size, quantity FROM orders WHERE fulfilled = 0')
     orders = cursor.fetchall()
-    summary_text = "*סיכום מצב הקופה:*
-"
+    summary_text = "*סיכום מצב הקופה:*"
     user_orders = {}
     size_prices = {'L': 36, 'XL': 39}
     for name, size, quantity in orders:
