@@ -249,7 +249,6 @@ def summary(message):
     for name, balance in users:
         spent = user_orders.get(name, 0)
         available = balance - spent
-        summary_text += f"{name} - יתרה: {balance} ש"ח, בהמתנה: {spent} ש"ח, פנוי: {available} ש"ח
-"
+        summary_text += f'{name} - יתרה: {balance} ש"ח, בהמתנה: {spent} ש"ח, פנוי: {available} ש"ח'
     bot.send_message(message.chat.id, summary_text, parse_mode="Markdown")
     show_menu(message.chat.id)
