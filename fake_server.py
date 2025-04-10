@@ -148,7 +148,7 @@ def confirm_order(message, size):
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         cursor.execute('INSERT INTO orders (user_id, name, quantity, size, ordered_date) VALUES (%s, %s, %s, %s, %s)', (user_id, name, quantity, size, now))
         cursor.execute('UPDATE users SET balance = balance - %s WHERE id = %s', (total, user_id))
-        bot.send_message(user_id, f"הוזמן: {quantity} תבניות {size}. עלות: {total} ש"ח.")
+        bot.send_message(user_id, f'הוזמן: {quantity} תבניות {size}. עלות: {total} ש"ח.')
         if ADMIN_ID:
             bot.send_message(ADMIN_ID, f"🔵 {name} הזמין {quantity} תבניות {size}")
     except:
