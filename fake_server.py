@@ -163,9 +163,7 @@ def my_orders(message):
     if not orders:
         bot.send_message(user_id, "אין הזמנות.")
     else:
-        response = "ההזמנות שלך:
-
-"
+        response = "ההזמנות שלך:"
         for oid, size, qty, fulfilled, f_qty, ordered_at, f_date in orders:
             price = 36 if size == 'L' else 39
             status = "סופק" if fulfilled else "ממתין"
