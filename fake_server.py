@@ -77,7 +77,7 @@ def check_balance(message):
     cursor.execute('SELECT balance FROM users WHERE id = %s', (user_id,))
     result = cursor.fetchone()
     if result:
-        bot.send_message(user_id, f"היתרה שלך: {result[0]} ש"ח")
+        bot.send_message(user_id, f'היתרה שלך: {result[0]} ש"ח')
     else:
         bot.send_message(user_id, "לא נמצא משתמש.")
 
