@@ -142,7 +142,7 @@ def confirm_order(message, size):
         price = 36 if size == 'L' else 39
         total = price * quantity
         if balance < total:
-            bot.send_message(user_id, f"יתרה לא מספיקה. דרושים {total} ש"ח ויש לך {balance}.")
+            bot.send_message(user_id, f'יתרה לא מספיקה. דרושים {total} ש"ח ויש לך {balance}.')
             show_menu(user_id)
             return
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
