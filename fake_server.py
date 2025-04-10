@@ -94,8 +94,7 @@ def manage_orders(message):
     if not orders:
         bot.send_message(message.chat.id, "אין הזמנות ממתינות.")
     else:
-        response = "הזמנות ממתינות:
-"
+        response = "הזמנות ממתינות:\n"
         for order_id, name, size, quantity in orders:
             response += f"#{order_id} - {name}: {quantity} ({size})
 "
