@@ -100,7 +100,7 @@ def handle_deposit(message):
         name = cursor.fetchone()[0]
         bot.send_message(user_id, f'הפקדה של {amount} ש"ח עודכנה בהצלחה.')
         if ADMIN_ID:
-            bot.send_message(ADMIN_ID, f"🟢 {name} הפקיד {amount} ש"ח לקופה.")
+            bot.send_message(ADMIN_ID, f'🟢 {name} הפקיד {amount} ש"ח לקופה.')
     except:
         bot.send_message(message.chat.id, "נא להזין סכום תקין.")
     show_menu(message.chat.id)
