@@ -185,7 +185,8 @@ def my_orders(message):
         # בניית הודעה
         response = f"היי {name}!\n"
         response += f"הזמנה מספר {oid}:\n"
-        response += f"הוזמן: {qty} תבניות מידה {size} – {total} ש\"ח\n"
+        #response += f"הוזמן: {qty} {size} תבניות מידהe} – {total} ש\"ח\n"
+        response += f"הוזמן: {qty} {size} תבניות מידה – {total} ש\"ח\n"
         response += f"סטטוס: {status}"
 
         bot.send_message(user_id, response)
