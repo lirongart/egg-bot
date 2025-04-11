@@ -183,11 +183,11 @@ def my_orders(message):
         total = (f_qty if fulfilled else qty) * price
 
         # בניית הודעה
-        response = f"היי {name}!\n"
-        response += f"הזמנה מספר {oid}:\n"
-        response += f"הוזמן: {qty} תבניות מידה {size}\n"
-        response += f"עלות: – {total} ש\"ח\n"
-        response += f"סטטוס: {status}"
+        response = f"👤 היי {name}!\n"
+        response += f"📦 הזמנה מספר {oid}:\n"
+        response += f"🔢 הוזמן: {qty} תבניות מידה {size}\n"
+        response += f"💰 עלות: – {total} ש\"ח\n"
+        response += f"🚚 סטטוס: {status}"
 
         bot.send_message(user_id, response)
 
