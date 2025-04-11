@@ -158,23 +158,40 @@ def confirm_order(message, size):
 @bot.message_handler(func=lambda m: m.text == 'ההזמנות שלי')
 def my_orders(message):
     user_id = message.from_user.id
-    cursor.execute('SELECT id, size, quantity, fulfilled, fulfilled_quantity, ordered_date, fulfilled_date FROM orders WHERE user_id = %s ORDER BY ordered_date DESC', (user_id,))
-    orders = cursor.fetchall()
-    if not orders:
+
+    # שליפת שם המשתמש
+    cursor.execute('SELECT name FROM users WHERE id = %s', (user_id,))
+    result = cursor.fetchone()
+    name = result[0] if result else 'משתמש'
+
+    # שליפת ההזמנה האחרונה
+    cursor.execute('''
+        SELECT id, size, quantity, fulfilled, fulfilled_quantity, ordered_date, fulfilled_date 
+        FROM orders 
+        WHERE user_id = %s 
+        ORDER BY ordered_date DESC 
+        LIMIT 1
+    ''', (user_id,))
+    order = cursor.fetchone()
+
+    if not order:
         bot.send_message(user_id, "אין הזמנות.")
     else:
-        response = "ההזמנות שלך:"
-        for oid, size, qty, fulfilled, f_qty, ordered_at, f_date in orders:
-            price = 36 if size == 'L' else 39
-            status = "סופק" if fulfilled else "ממתין"
-            total = (f_qty if fulfilled else qty) * price
-            response += f'#{oid} - {qty} ({size}) | {status} - {total} ש"ח'
-            response += f"הוזמן: {ordered_at}"
-            if fulfilled:
-                response += f"סופק: {f_date}"
-            response += ""
+        oid, size, qty, fulfilled, f_qty, ordered_at, f_date = order
+        price = 36 if size == 'L' else 39
+        status = "סופק" if fulfilled else "ממתין"
+        total = (f_qty if fulfilled else qty) * price
+
+        # בניית הודעה
+        response = f"היי {name}!\n"
+        response += f"הזמנה מספר {oid}:\n"
+        response += f"הוזמן: {qty} תבניות מידה {size} – {total} ש\"ח\n"
+        response += f"סטטוס: {status}"
+
         bot.send_message(user_id, response)
+
     show_menu(user_id)
+
 
 @bot.message_handler(func=lambda m: m.text == 'ניהול הזמנות' and m.from_user.id == ADMIN_ID)
 def manage_orders(message):
