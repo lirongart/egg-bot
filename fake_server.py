@@ -300,6 +300,46 @@ def summary(message):
         summary_text += f'{name} - יתרה: {balance} ש"ח, בהמתנה: {spent} ש"ח, פנוי: {available} ש"ח'
     bot.send_message(message.chat.id, summary_text, parse_mode="Markdown")
     show_menu(message.chat.id)
+    
+#מקטע חדש לבדיקה    
+@bot.message_handler(commands=['cancel_all_orders'])
+def confirm_cancel_all_orders(message):
+    if message.from_user.id != ADMIN_ID:
+        bot.send_message(message.chat.id, "רק מנהל יכול לבצע פעולה זו.")
+        return
+
+    markup = telebot.types.InlineKeyboardMarkup()
+    markup.add(
+        telebot.types.InlineKeyboardButton("✅ כן, בטל הכל", callback_data="confirm_cancel_all"),
+        telebot.types.InlineKeyboardButton("❌ לא, בטל", callback_data="cancel_action")
+    )
+    bot.send_message(message.chat.id, "האם אתה בטוח שברצונך לבטל את כל ההזמנות הפעילות?", reply_markup=markup)
+
+@bot.callback_query_handler(func=lambda call: call.data == "confirm_cancel_all")
+def cancel_all_orders_confirmed(call):
+    try:
+        cursor.execute('SELECT id, user_id, quantity, size FROM orders WHERE fulfilled = 0')
+        orders = cursor.fetchall()
+        if not orders:
+            bot.send_message(call.message.chat.id, "אין הזמנות פעילות לביטול.")
+            return
+
+        for order_id, uid, qty, size in orders:
+            price = size_prices.get(size, 0)
+            refund = qty * price
+            cursor.execute('UPDATE users SET balance = balance + %s WHERE id = %s', (refund, uid))
+
+        cursor.execute('DELETE FROM orders WHERE fulfilled = 0')
+        conn.commit()
+
+        bot.send_message(call.message.chat.id, "❌ כל ההזמנות הפעילות בוטלו וזוכו בהתאם.")
+    except Exception as e:
+        bot.send_message(call.message.chat.id, f"שגיאה בביטול ההזמנות: {str(e)}")
+
+@bot.callback_query_handler(func=lambda call: call.data == "cancel_action")
+def cancel_action(call):
+    bot.send_message(call.message.chat.id, "הפעולה בוטלה.")
+
 
 def run_bot():
     print("Bot is starting...")
