@@ -236,7 +236,8 @@ def fulfill_order(message):
             return
 
         customer_id, customer_name, ordered_quantity, size = order
-
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
         # 🔒 הגנת ערכים
         if fulfilled_quantity < 0:
             bot.send_message(user_id, "הכמות שסופקה לא יכולה להיות שלילית.")
@@ -270,8 +271,7 @@ def fulfill_order(message):
         actual_cost = fulfilled_quantity * price
         original_cost = ordered_quantity * price
         refund = original_cost - actual_cost
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
+        
         cursor.execute('''
             UPDATE orders 
             SET fulfilled = 1,
