@@ -363,19 +363,59 @@ def fulfill_all_orders_confirmed(call):
             return
 
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        total_sum = 0
 
         for order_id, uid, qty, size in orders:
             price = size_prices.get(size, 0)
+            total = qty * price
+            total_sum += total
+
             cursor.execute('''
                 UPDATE orders
-                SET fulfilled = 1, fulfilled_quantity = %s, fulfilled_date = %s
+                SET fulfilled = 1,
+                    fulfilled_quantity = %s,
+                    fulfilled_date = %s,
+                    actual_total = %s
                 WHERE id = %s
-            ''', (qty, now, order_id))
+            ''', (qty, now, total, order_id))
 
         conn.commit()
-        bot.send_message(call.message.chat.id, "✅ כל ההזמנות עודכנו כסופקו במלואן.")
+
+        # בדיקה אם כל ההזמנות סופקו
+        cursor.execute('SELECT COUNT(*) FROM orders WHERE fulfilled = 0')
+        remaining = cursor.fetchone()[0]
+
+        if remaining == 0:
+            bot.send_message(call.message.chat.id, f"✅ כל ההזמנות עודכנו כסופקו.\n💰 סה\"כ חיוב כולל: {total_sum} ש\"ח")
+        else:
+            bot.send_message(call.message.chat.id, f"✅ עודכנו {len(orders)} הזמנות כסופקו.")
+
     except Exception as e:
         bot.send_message(call.message.chat.id, f"שגיאה בעדכון ההזמנות: {str(e)}")
+
+# @bot.callback_query_handler(func=lambda call: call.data == "confirm_fulfill_all")
+# def fulfill_all_orders_confirmed(call):
+#     try:
+#         cursor.execute('SELECT id, user_id, quantity, size FROM orders WHERE fulfilled = 0')
+#         orders = cursor.fetchall()
+#         if not orders:
+#             bot.send_message(call.message.chat.id, "אין הזמנות פעילות לעדכון.")
+#             return
+
+#         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+#         for order_id, uid, qty, size in orders:
+#             price = size_prices.get(size, 0)
+#             cursor.execute('''
+#                 UPDATE orders
+#                 SET fulfilled = 1, fulfilled_quantity = %s, fulfilled_date = %s
+#                 WHERE id = %s
+#             ''', (qty, now, order_id))
+
+#         conn.commit()
+#         bot.send_message(call.message.chat.id, "✅ כל ההזמנות עודכנו כסופקו במלואן.")
+#     except Exception as e:
+#         bot.send_message(call.message.chat.id, f"שגיאה בעדכון ההזמנות: {str(e)}")
 
 
 def run_bot():
