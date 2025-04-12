@@ -259,10 +259,14 @@ def fulfill_order(message):
 
         cursor.execute('''
             UPDATE orders 
-            SET fulfilled = 1, fulfilled_quantity = %s, fulfilled_date = %s 
+            SET fulfilled = 1,
+                fulfilled_quantity = %s,
+                fulfilled_date = %s,
+                actual_total = %s
             WHERE id = %s
-        ''', (fulfilled_quantity, now, order_id))
+        ''', (fulfilled_quantity, now, actual_cost, order_id))
 
+        
         if refund > 0:
             cursor.execute('UPDATE users SET balance = balance + %s WHERE id = %s', (refund, customer_id))
 
