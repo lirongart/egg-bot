@@ -340,6 +340,43 @@ def cancel_all_orders_confirmed(call):
 def cancel_action(call):
     bot.send_message(call.message.chat.id, "הפעולה בוטלה.")
 
+@bot.message_handler(commands=['fulfill_all'])
+def confirm_fulfill_all_orders(message):
+    if message.from_user.id != ADMIN_ID:
+        bot.send_message(message.chat.id, "רק מנהל יכול לבצע פעולה זו.")
+        return
+
+    markup = telebot.types.InlineKeyboardMarkup()
+    markup.add(
+        telebot.types.InlineKeyboardButton("✅ כן, אשר אספקה", callback_data="confirm_fulfill_all"),
+        telebot.types.InlineKeyboardButton("❌ לא, בטל", callback_data="cancel_action")
+    )
+    bot.send_message(message.chat.id, "האם אתה בטוח שברצונך לאשר אספקה מלאה לכל ההזמנות?", reply_markup=markup)
+
+@bot.callback_query_handler(func=lambda call: call.data == "confirm_fulfill_all")
+def fulfill_all_orders_confirmed(call):
+    try:
+        cursor.execute('SELECT id, user_id, quantity, size FROM orders WHERE fulfilled = 0')
+        orders = cursor.fetchall()
+        if not orders:
+            bot.send_message(call.message.chat.id, "אין הזמנות פעילות לעדכון.")
+            return
+
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        for order_id, uid, qty, size in orders:
+            price = size_prices.get(size, 0)
+            cursor.execute('''
+                UPDATE orders
+                SET fulfilled = 1, fulfilled_quantity = %s, fulfilled_date = %s
+                WHERE id = %s
+            ''', (qty, now, order_id))
+
+        conn.commit()
+        bot.send_message(call.message.chat.id, "✅ כל ההזמנות עודכנו כסופקו במלואן.")
+    except Exception as e:
+        bot.send_message(call.message.chat.id, f"שגיאה בעדכון ההזמנות: {str(e)}")
+
 
 def run_bot():
     print("Bot is starting...")
