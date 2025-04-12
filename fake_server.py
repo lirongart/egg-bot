@@ -210,35 +210,68 @@ def manage_orders(message):
 
 @bot.message_handler(commands=['fulfill'])
 def fulfill_order(message):
-    if message.from_user.id != ADMIN_ID:
+    user_id = message.from_user.id
+    if not is_admin(user_id):
+        bot.send_message(user_id, "רק מנהל יכול לבצע פעולה זו.")
         return
+
     try:
-        _, order_id, qty = message.text.split()
-        order_id = int(order_id)
-        qty = int(qty)
-        cursor.execute('SELECT user_id, name, quantity, size FROM orders WHERE id = %s AND fulfilled = 0', (order_id,))
-        data = cursor.fetchone()
-        if not data:
-            bot.send_message(message.chat.id, f"הזמנה #{order_id} לא קיימת או כבר סופקה.")
+        parts = message.text.split()
+        if len(parts) != 3:
+            bot.send_message(user_id, "פורמט שגוי. השתמש: /fulfill [מספר_הזמנה] [כמות_שסופקה]")
             return
-        user_id, name, ordered_qty, size = data
-        price = 36 if size == 'L' else 39
-        actual_total = qty * price
-        original_total = ordered_qty * price
-        refund = original_total - actual_total
+
+        order_id = int(parts[1])
+        fulfilled_quantity = int(parts[2])
+
+        cursor.execute('SELECT user_id, name, quantity, size FROM orders WHERE id = %s AND fulfilled = 0', (order_id,))
+        order = cursor.fetchone()
+
+        if not order:
+            bot.send_message(user_id, f"הזמנה מס' {order_id} לא נמצאה או כבר סופקה.")
+            return
+
+        customer_id, customer_name, ordered_quantity, size = order
+
+        # 🔒 הגנת ערכים
+        if fulfilled_quantity < 0:
+            bot.send_message(user_id, "הכמות שסופקה לא יכולה להיות שלילית.")
+            return
+
+        if fulfilled_quantity > ordered_quantity:
+            bot.send_message(user_id, f"הוזמנו רק {ordered_quantity} תבניות. לא ניתן לעדכן אספקה גבוהה יותר.")
+            return
+
+        price = PRICE_L if size == 'L' else PRICE_XL
+        actual_cost = fulfilled_quantity * price
+        original_cost = ordered_quantity * price
+        refund = original_cost - actual_cost
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        cursor.execute(
-            "UPDATE orders SET fulfilled = 1, fulfilled_quantity = %s, fulfilled_date = %s WHERE id = %s",
-            (qty, now, order_id)
-        )
+
+        cursor.execute('''
+            UPDATE orders 
+            SET fulfilled = 1, fulfilled_quantity = %s, fulfilled_date = %s 
+            WHERE id = %s
+        ''', (fulfilled_quantity, now, order_id))
+
         if refund > 0:
-            cursor.execute('UPDATE users SET balance = balance + %s WHERE id = %s', (refund, user_id))
-        bot.send_message(message.chat.id, f'הזמנה #{order_id} עודכנה. חיוב סופי: {actual_total} ש"ח.')
-        bot.send_message(user_id, f"""הזמנתך #{order_id} סופקה: {qty}/{ordered_qty} ({size})
-סה"כ חיוב: {actual_total} ש"ח
-זיכוי: {refund} ש"ח""")
-    except:
-        bot.send_message(message.chat.id, "שימוש: /fulfill order_id כמות_שסופקה")
+            cursor.execute('UPDATE users SET balance = balance + %s WHERE id = %s', (refund, customer_id))
+
+        conn.commit()
+
+        bot.send_message(user_id, f"הזמנה #{order_id} עודכנה: {fulfilled_quantity}/{ordered_quantity} ({size})\n"
+                                  f"חיוב סופי: {actual_cost} ש\"ח" +
+                                  (f"\nזיכוי: {refund} ש\"ח" if refund > 0 else ""))
+
+        bot.send_message(customer_id, f"הזמנתך #{order_id} סופקה: {fulfilled_quantity}/{ordered_quantity} תבניות {size}.\n"
+                                      f"חיוב סופי: {actual_cost} ש\"ח" +
+                                      (f"\nזיכוי לחשבונך: {refund} ש\"ח" if refund > 0 else ""))
+
+    except ValueError:
+        bot.send_message(user_id, "שגיאה בפורמט. השתמש: /fulfill [מספר_הזמנה] [כמות_שסופקה]")
+    except Exception as e:
+        bot.send_message(user_id, f"שגיאה: {str(e)}")
+
 
 @bot.message_handler(func=lambda m: m.text == 'סיכום כללי' and m.from_user.id == ADMIN_ID)
 def summary(message):
