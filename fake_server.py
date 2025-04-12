@@ -279,6 +279,19 @@ def fulfill_order(message):
         bot.send_message(customer_id, f"הזמנתך #{order_id} סופקה: {fulfilled_quantity}/{ordered_quantity} תבניות {size}.\n"
                                       f"חיוב סופי: {actual_cost} ש\"ח" +
                                       (f"\nזיכוי לחשבונך: {refund} ש\"ח" if refund > 0 else ""))
+        
+        # בדיקה אם כל ההזמנות סופקו
+        cursor.execute('SELECT COUNT(*) FROM orders WHERE fulfilled = 0')
+        remaining = cursor.fetchone()[0]
+        
+        if remaining == 0:
+            cursor.execute('''
+                SELECT SUM(actual_total) FROM orders
+                WHERE DATE(fulfilled_date) = CURRENT_DATE
+            ''')
+            total_sum = cursor.fetchone()[0] or 0
+            bot.send_message(user_id, f'✅ כל ההזמנות סופקו.\n💰 סה\"כ חיוב כולל היום: {total_sum} ש\"ח')
+
 
     except ValueError:
         bot.send_message(user_id, "שגיאה בפורמט. השתמש: /fulfill [מספר_הזמנה] [כמות_שסופקה]")
