@@ -37,6 +37,9 @@ CREATE TABLE IF NOT EXISTS orders (
 bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
 
+# עדכון מחיר תבניות
+size_prices = {'L': 36, 'XL': 39}
+
 @app.route('/')
 def home():
     return f"Bot is alive! {datetime.now()}"
