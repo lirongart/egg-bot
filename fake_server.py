@@ -241,6 +241,10 @@ def fulfill_order(message):
         if fulfilled_quantity > ordered_quantity:
             bot.send_message(user_id, f"הוזמנו רק {ordered_quantity} תבניות. לא ניתן לעדכן אספקה גבוהה יותר.")
             return
+        
+        if fulfilled_quantity == 0:
+            bot.send_message(user_id, f"הוזנה כמות אספקה 0 להזמנה #{order_id}. ההזמנה תישאר במצב ממתין.")
+            return
 
         price = PRICE_L if size == 'L' else PRICE_XL
         actual_cost = fulfilled_quantity * price
