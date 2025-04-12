@@ -264,7 +264,21 @@ def fulfill_order(message):
         
             bot.send_message(customer_id, f"הזמנתך #{order_id} עודכנה: 0/{ordered_quantity} תבניות {size}.\n"
                                           f"לא סופקה בפועל – לא בוצע חיוב.")
+            
+            # ✅ נוודא אם זו ההזמנה האחרונה להיום
+            cursor.execute('SELECT COUNT(*) FROM orders WHERE fulfilled = 0')
+            remaining = cursor.fetchone()[0]
+        
+            if remaining == 0:
+                cursor.execute('''
+                    SELECT SUM(actual_total) FROM orders
+                    WHERE DATE(fulfilled_date) = CURRENT_DATE
+                ''')
+                total_sum = cursor.fetchone()[0] or 0
+                bot.send_message(user_id, f'✅ כל ההזמנות סופקו.\n💰 סה״כ חיוב כולל היום: {total_sum} ש״ח')
+        
             return
+
 
         #Calculate
         price = size_prices.get(size, 0)
