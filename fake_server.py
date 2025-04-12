@@ -244,9 +244,7 @@ def fulfill_order(message):
             return
         
         if fulfilled_quantity == 0:
-            #bot.send_message(user_id, f"הוזנה כמות אספקה 0 להזמנה #{order_id}. ההזמנה תישאר במצב ממתין.")
-            print(">> 0 quantity detected")
-            bot.send_message(user_id, "🟡 אספקה 0 — הודעה נשלחה")
+            bot.send_message(user_id, f"הוזנה כמות אספקה 0 להזמנה #{order_id}. ההזמנה תישאר במצב ממתין.")
             return
 
         price = PRICE_L if size == 'L' else PRICE_XL
