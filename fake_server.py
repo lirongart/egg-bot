@@ -247,7 +247,8 @@ def fulfill_order(message):
             bot.send_message(user_id, f"הוזנה כמות אספקה 0 להזמנה #{order_id}. ההזמנה תישאר במצב ממתין.")
             return
 
-        price = PRICE_L if size == 'L' else PRICE_XL
+        #price = PRICE_L if size == 'L' else PRICE_XL
+        price = size_prices.get(size, 0)
         actual_cost = fulfilled_quantity * price
         original_cost = ordered_quantity * price
         refund = original_cost - actual_cost
