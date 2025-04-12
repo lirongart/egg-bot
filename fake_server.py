@@ -211,7 +211,7 @@ def manage_orders(message):
 @bot.message_handler(commands=['fulfill'])
 def fulfill_order(message):
     user_id = message.from_user.id
-    if not is_admin(user_id):
+    if not ADMIN_ID(user_id):
         bot.send_message(user_id, "רק מנהל יכול לבצע פעולה זו.")
         return
 
