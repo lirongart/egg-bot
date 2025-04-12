@@ -247,10 +247,25 @@ def fulfill_order(message):
             return
         
         if fulfilled_quantity == 0:
-            bot.send_message(user_id, f"הוזנה כמות אספקה 0 להזמנה #{order_id}. ההזמנה תישאר במצב ממתין.")
+            cursor.execute('''
+                UPDATE orders
+                SET fulfilled = 1,
+                    fulfilled_quantity = 0,
+                    fulfilled_date = %s,
+                    actual_total = 0
+                WHERE id = %s
+            ''', (now, order_id))
+        
+            conn.commit()
+        
+            bot.send_message(user_id, f"הזמנה #{order_id} עודכנה כסופקה: 0/{ordered_quantity} ({size})\n"
+                                      f"💤 לא סופקה בפועל – לא בוצע חיוב.")
+        
+            bot.send_message(customer_id, f"הזמנתך #{order_id} עודכנה: 0/{ordered_quantity} תבניות {size}.\n"
+                                          f"לא סופקה בפועל – לא בוצע חיוב.")
             return
 
-        #price = PRICE_L if size == 'L' else PRICE_XL
+        #Calculate
         price = size_prices.get(size, 0)
         actual_cost = fulfilled_quantity * price
         original_cost = ordered_quantity * price
