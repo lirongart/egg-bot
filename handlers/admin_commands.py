@@ -25,9 +25,11 @@ def register(bot):
         text = message.text
 
         # חילוץ פרטים
-        amount_match = re.search(r'(\d+(?:\.\d+)?) ש\\"ח', text)
-        name_match = re.search(r'מ(.*?) באפליקציית bit', text)
-        url_match = re.search(r'(https://www\\.bitpay\\.co\\.il/app/transaction-info\\?i=\\S+)', text)
+        text = message.text.replace("\n", " ").replace("‏", " ").replace(" ", " ").replace("!", "! ").replace(":", ": ")
+        amount_match = re.search(r'(\d+(?:\.\d+)?)\s?ש"?ח', text)
+        name_match = re.search(r'מ(.*?)\s?באפליקציית bit', text)
+        url_match = re.search(r'(https://www\.bitpay\.co\.il/app/transaction-info\?i=\S+)', text)
+
 
         if not (amount_match and name_match and url_match):
             bot.send_message(message.chat.id, "⚠️ לא זוהתה הודעת bit תקינה. ודא שהעתקת את כל ההודעה כולל שם, סכום וקישור.")
