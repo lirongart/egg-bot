@@ -89,6 +89,10 @@ def register(bot):
         log(f"[BIT DEPOSIT] {matched_name} → {amount} ש\"ח עודכן למשתמש {user_id}. לינק: {bit_url}")
 
         # הודעות
-        bot.send_message(user_id, f"💰 הופקדו {amount} ש\"ח לחשבונך. יתרתך עודכנה.")
-        bot.send_message(message.chat.id, f"✅ ההפקדה עבור {matched_name} עודכנה בהצלחה ({amount} ש\"ח).")
-    
+        # bot.send_message(user_id, f"💰 הופקדו {amount} ש\"ח לחשבונך. יתרתך עודכנה.")
+        # bot.send_message(message.chat.id, f"✅ ההפקדה עבור {matched_name} עודכנה בהצלחה ({amount} ש\"ח).")
+        try:
+            bot.send_message(user_id, f"💰 הופקדו {amount} ש\"ח לחשבונך. יתרתך עודכנה.")
+        except Exception as e:
+            bot.send_message(message.chat.id, f"⚠️ לא ניתן לשלוח הודעה למשתמש {user_id}. שגיאה:\n{e}")
+
