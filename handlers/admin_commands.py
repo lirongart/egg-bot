@@ -37,8 +37,10 @@ def register(bot):
         amount_match = re.search(r'(\d+(?:\.\d+)?)\s*ש[״"]?ח', text)
         
         # חילוץ שם: מ[שם] באפליקציית bit
-        name_match = re.search(r'מ(.*?)\s*באפליקציית bit', text)
-        
+        #name_match = re.search(r'מ(.*?)\s*באפליקציית bit', text)
+        name_match = re.search(r'מחכים לך מ(.*?)\s*באפליקציית bit', text)
+        #name_match = re.search(r'מ(?:.*?)?(.*?)\s*באפליקציית bit', text)
+
         # חילוץ קישור
         url_match = re.search(r'(https://www\.bitpay\.co\.il/app/transaction-info\?i=\S+)', text)
 
