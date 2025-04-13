@@ -24,5 +24,5 @@ def register(bot):
 
     @bot.message_handler(commands=['me'])
     def whoami(message):
-    bot.send_message(message.chat.id, f"ה־Telegram ID שלך הוא: {message.from_user.id}")
+        bot.send_message(message.chat.id, f"ה־Telegram ID שלך הוא: {message.from_user.id}")
 
