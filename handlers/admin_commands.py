@@ -1,7 +1,7 @@
 import re
 from config import ADMIN_ID
 from datetime import datetime
-from keyboards.admin_menu import admin_panel_inline
+from keyboards.admin_menu import admin_main_menu
 from utils.logger import log
 
 pending_bit_payment = {}
@@ -11,7 +11,7 @@ def register(bot):
     def admin_entry(message):
         if message.from_user.id != ADMIN_ID:
             return
-        bot.send_message(message.chat.id, "תפריט ניהול:", reply_markup=admin_panel_inline())
+        bot.send_message(message.chat.id, "תפריט ניהול:", reply_markup=admin_main_menu())
 
     @bot.callback_query_handler(func=lambda call: call.data == "bit_deposit")
     def prompt_bit_sms(call):
