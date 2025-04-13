@@ -13,11 +13,11 @@ def register(bot):
             return
         bot.send_message(message.chat.id, "תפריט ניהול:", reply_markup=admin_main_menu())
 
-    @bot.callback_query_handler(func=lambda call: call.data == "bit_deposit")
-    def prompt_bit_sms(call):
-        bot.answer_callback_query(call.id)
-        bot.send_message(call.message.chat.id, "📨 הדבק עכשיו את הודעת ה־SMS שקיבלת מ־bit.")
-        pending_bit_payment[call.message.chat.id] = True
+    @bot.message_handler(func=lambda m: m.text == "הפקדה מ־bit" and m.from_user.id == ADMIN_ID)
+    def bit_deposit(message):
+        bot.send_message(message.chat.id, "📨 הדבק עכשיו את הודעת ה־SMS שקיבלת מ־bit.")
+        pending_bit_payment[message.chat.id] = True
+
 
     @bot.message_handler(func=lambda m: pending_bit_payment.get(m.chat.id) and m.from_user.id == ADMIN_ID)
     def handle_bit_sms(message):
