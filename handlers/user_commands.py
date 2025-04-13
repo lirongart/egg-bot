@@ -34,10 +34,10 @@ def register(bot):
         
     @bot.message_handler(commands=['menu'])
     def menu(message):
-    if is_admin(message.from_user.id):
-        bot.send_message(message.chat.id, "תפריט מנהל:", reply_markup=admin_main_menu())
-    else:
-        bot.send_message(message.chat.id, "בחר פעולה:", reply_markup=main_menu())
+        if is_admin(message.from_user.id):
+            bot.send_message(message.chat.id, "תפריט מנהל:", reply_markup=admin_main_menu())
+        else:
+            bot.send_message(message.chat.id, "בחר פעולה:", reply_markup=main_menu())
 
     @bot.message_handler(func=lambda m: m.text == "הזמנת תבניות")
     def order_eggs(message):
