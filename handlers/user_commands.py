@@ -24,13 +24,31 @@ def register(bot):
     def register_user(message):
         name = message.text
         user_id = message.from_user.id
+    
+        # 1. הוספה לטבלת users
         cursor.execute('INSERT INTO users (id, name, balance) VALUES (%s, %s, %s)', (user_id, name, 0))
         conn.commit()
     
+        # 2. הוספה לטבלת bit_users
+        cursor.execute("""
+            INSERT INTO bit_users (user_id, bit_name)
+            VALUES (%s, %s)
+            ON CONFLICT (user_id) DO UPDATE SET bit_name = EXCLUDED.bit_name
+        """, (user_id, name))
+
+    
+        # 3. הצגת תפריט מותאם
         if is_admin(user_id):
             bot.send_message(user_id, f"הרשמה הושלמה, {name}!", reply_markup=admin_main_menu())
         else:
             bot.send_message(user_id, f"הרשמה הושלמה, {name}!", reply_markup=main_menu())
+    
+        # 4. הצגת ה־user_id למשתמש
+        bot.send_message(user_id, f"ℹ️ ה־Telegram ID שלך הוא: {user_id}")
+    
+        # 5. עדכון למנהל
+        bot.send_message(ADMIN_ID, f"🆕 משתמש חדש נרשם:\nשם: {name}\nID: {user_id}\nנוסף ל־bit_users")
+
         
     @bot.message_handler(commands=['menu'])
     def menu(message):
