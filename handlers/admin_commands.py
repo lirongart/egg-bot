@@ -94,5 +94,5 @@ def register(bot):
         try:
             bot.send_message(user_id, f"💰 הופקדו {amount} ש\"ח לחשבונך. יתרתך עודכנה.")
         except Exception as e:
-            bot.send_message(message.chat.id, f"⚠️ לא ניתן לשלוח הודעה למשתמש {user_id}. שגיאה:\n{e}")
+            bot.send_message(ADMIN_ID, f"⚠️ לא ניתן לשלוח למשתמש {user_id}. סיבת השגיאה:\n{e}")
 
