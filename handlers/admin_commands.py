@@ -24,10 +24,16 @@ def register(bot):
         pending_bit_payment.pop(message.chat.id, None)
         text = message.text
 
-        # חילוץ פרטים
-        text = message.text.replace("\n", " ").replace("‏", " ").replace(" ", " ").replace("!", "! ").replace(":", ": ")
-        amount_match = re.search(r'(\d+(?:\.\d+)?)\s?ש"?ח', text)
-        name_match = re.search(r'מ(.*?)\s?באפליקציית bit', text)
+        # ניקוי רווחים מיוחדים
+        text = re.sub(r'[\n\u200f\u00a0]', ' ', message.text).strip()
+        
+        # חילוץ סכום
+        amount_match = re.search(r'(\d+(?:\.\d+)?)\s*ש[״"]?ח', text)
+        
+        # חילוץ שם: מ[שם] באפליקציית bit
+        name_match = re.search(r'מ(.*?)\s*באפליקציית bit', text)
+        
+        # חילוץ קישור
         url_match = re.search(r'(https://www\.bitpay\.co\.il/app/transaction-info\?i=\S+)', text)
 
 
