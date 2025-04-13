@@ -3,6 +3,12 @@ from config import ADMIN_ID
 from datetime import datetime
 from keyboards.admin_menu import admin_main_menu
 from utils.logger import log
+from config import DATABASE_URL
+import psycopg2
+
+conn = psycopg2.connect(DATABASE_URL)
+conn.autocommit = True
+cursor = conn.cursor()
 
 pending_bit_payment = {}
 
@@ -19,108 +25,43 @@ def register(bot):
         pending_bit_payment[message.chat.id] = True
 
 
-    # @bot.message_handler(func=lambda m: pending_bit_payment.get(m.chat.id) and m.from_user.id == ADMIN_ID)
-    # def handle_bit_sms(message):
-    #     pending_bit_payment.pop(message.chat.id, None)
-    #     text = message.text
-
-    #     # ניקוי רווחים מיוחדים
-    #     text = re.sub(r'[\n\u200f\u00a0]', ' ', message.text).strip()
-        
-    #     # חילוץ סכום
-    #     amount_match = re.search(r'(\d+(?:\.\d+)?)\s*ש[״"]?ח', text)
-        
-    #     # חילוץ שם: מ[שם] באפליקציית bit
-    #     name_match = re.search(r'מ(.*?)\s*באפליקציית bit', text)
-        
-    #     # חילוץ קישור
-    #     url_match = re.search(r'(https://www\.bitpay\.co\.il/app/transaction-info\?i=\S+)', text)
-
-
-    #     if not (amount_match and name_match and url_match):
-    #         bot.send_message(message.chat.id, "⚠️ לא זוהתה הודעת bit תקינה. ודא שהעתקת את כל ההודעה כולל שם, סכום וקישור.")
-    #         return
-
-    #     amount = float(amount_match.group(1))
-    #     full_name = name_match.group(1).strip()
-    #     bit_url = url_match.group(1)
-
-    #     # בדיקה אם הקישור כבר טופל
-    #     cursor.execute("SELECT id FROM bit_transactions WHERE url = %s", (bit_url,))
-    #     exists = cursor.fetchone()
-    #     if exists:
-    #         bot.send_message(message.chat.id, "⚠️ ההפקדה הזו כבר תועדה בעבר (לפי הקישור).")
-    #         return
-
-    #     # חיפוש fuzzy לפי שם
-    #     cursor.execute("SELECT user_id, bit_name FROM bit_users WHERE bit_name ILIKE %s", (f"%{full_name}%",))
-    #     results = cursor.fetchall()
-
-    #     if not results:
-    #         bot.send_message(message.chat.id, f"⚠️ לא נמצאו התאמות לשם '{full_name}' בטבלת bit_users.")
-    #         return
-    #     elif len(results) > 1:
-    #         matches = ', '.join(name for _, name in results)
-    #         bot.send_message(message.chat.id, f"⚠️ נמצאו מספר התאמות:\n{matches}\nאנא דייק את שם המפקיד.")
-    #         return
-
-    #     user_id, matched_name = results[0]
-
-    #     # עדכון יתרה
-    #     cursor.execute("UPDATE users SET balance = balance + %s WHERE id = %s", (amount, user_id))
-
-    #     # תיעוד
-    #     cursor.execute("""
-    #         INSERT INTO bit_transactions (user_id, full_name, amount, url, timestamp)
-    #         VALUES (%s, %s, %s, %s, %s)
-    #     """, (user_id, matched_name, amount, bit_url, datetime.now()))
-
-    #     conn.commit()
-
-    #     # לוג לאדמין
-    #     log(f"[BIT DEPOSIT] {matched_name} → {amount} ש\"ח עודכן למשתמש {user_id}. לינק: {bit_url}")
-
-    #     # הודעות
-    #     bot.send_message(user_id, f"💰 הופקדו {amount} ש\"ח לחשבונך. יתרתך עודכנה.")
-    #     bot.send_message(message.chat.id, f"✅ ההפקדה עבור {matched_name} עודכנה בהצלחה ({amount} ש\"ח).")
-    
-    
     @bot.message_handler(func=lambda m: pending_bit_payment.get(m.chat.id) and m.from_user.id == ADMIN_ID)
     def handle_bit_sms(message):
         pending_bit_payment.pop(message.chat.id, None)
         text = message.text
-    
-        # ניקוי טקסט מקדים
-        text = re.sub(r'[\n\u200f\u00a0]', ' ', text).strip()
-    
-        # חילוץ פרטים
+
+        # ניקוי רווחים מיוחדים
+        text = re.sub(r'[\n\u200f\u00a0]', ' ', message.text).strip()
+        
+        # חילוץ סכום
         amount_match = re.search(r'(\d+(?:\.\d+)?)\s*ש[״"]?ח', text)
+        
+        # חילוץ שם: מ[שם] באפליקציית bit
         name_match = re.search(r'מ(.*?)\s*באפליקציית bit', text)
+        
+        # חילוץ קישור
         url_match = re.search(r'(https://www\.bitpay\.co\.il/app/transaction-info\?i=\S+)', text)
-    
+
+
         if not (amount_match and name_match and url_match):
             bot.send_message(message.chat.id, "⚠️ לא זוהתה הודעת bit תקינה. ודא שהעתקת את כל ההודעה כולל שם, סכום וקישור.")
             return
-    
+
         amount = float(amount_match.group(1))
         full_name = name_match.group(1).strip()
         bit_url = url_match.group(1)
-    
-        print(f"[DEBUG] סכום: {amount} | שם: {full_name} | לינק: {bit_url}")
-    
-        # בדיקה אם כבר תועד
+
+        # בדיקה אם הקישור כבר טופל
         cursor.execute("SELECT id FROM bit_transactions WHERE url = %s", (bit_url,))
         exists = cursor.fetchone()
-        print(f"[DEBUG] קיים כבר במסד? {exists}")
         if exists:
             bot.send_message(message.chat.id, "⚠️ ההפקדה הזו כבר תועדה בעבר (לפי הקישור).")
             return
-    
-        # חיפוש fuzzy
+
+        # חיפוש fuzzy לפי שם
         cursor.execute("SELECT user_id, bit_name FROM bit_users WHERE bit_name ILIKE %s", (f"%{full_name}%",))
         results = cursor.fetchall()
-        print(f"[DEBUG] תוצאות fuzzy: {results}")
-    
+
         if not results:
             bot.send_message(message.chat.id, f"⚠️ לא נמצאו התאמות לשם '{full_name}' בטבלת bit_users.")
             return
@@ -128,21 +69,24 @@ def register(bot):
             matches = ', '.join(name for _, name in results)
             bot.send_message(message.chat.id, f"⚠️ נמצאו מספר התאמות:\n{matches}\nאנא דייק את שם המפקיד.")
             return
-    
+
         user_id, matched_name = results[0]
-    
+
         # עדכון יתרה
         cursor.execute("UPDATE users SET balance = balance + %s WHERE id = %s", (amount, user_id))
-    
-        # תיעוד במסד
+
+        # תיעוד
         cursor.execute("""
             INSERT INTO bit_transactions (user_id, full_name, amount, url, timestamp)
             VALUES (%s, %s, %s, %s, %s)
         """, (user_id, matched_name, amount, bit_url, datetime.now()))
+
         conn.commit()
-    
-        print(f"[DEBUG] הפקדה עודכנה למשתמש {user_id} | סכום: {amount}")
-    
+
+        # לוג לאדמין
+        log(f"[BIT DEPOSIT] {matched_name} → {amount} ש\"ח עודכן למשתמש {user_id}. לינק: {bit_url}")
+
         # הודעות
         bot.send_message(user_id, f"💰 הופקדו {amount} ש\"ח לחשבונך. יתרתך עודכנה.")
         bot.send_message(message.chat.id, f"✅ ההפקדה עבור {matched_name} עודכנה בהצלחה ({amount} ש\"ח).")
+    
