@@ -74,7 +74,7 @@ def register(bot):
             total = quantity * price
     
             if balance < total:
-                bot.send_message(user_id, f"אין לך מספיק יתרה.\nעלות ההזמנה: {total} ש\"ח\nהיתרה שלך: {balance} ש\"ח\n\n לטעינת יתרה אנא העבר כסף ב bit לשמואל ורולקר/n/n בטלפון: 0547665847"
+                bot.send_message(user_id, f"אין לך מספיק יתרה.\nעלות ההזמנה: {total} ש\"ח\nהיתרה שלך: {balance} ש\"ח\n\n לטעינת יתרה אנא העבר כסף ב bit לשמואל ורולקר/n/n בטלפון: 0547665847")
                 return
     
             now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
