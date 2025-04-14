@@ -56,8 +56,13 @@ def register(bot):
 
     def ask_quantity_step(message, size):
         user_id = message.from_user.id
+        if size not in ['L', 'XL']:
+            bot.send_message(user_id, "❌ מידה לא חוקית.\nנא לבחור רק 'L' או 'XL'.", reply_markup=main_menu())
+            return
+    
         bot.send_message(user_id, f"איזו כמות של תבניות {size} תרצה להזמין?")
         bot.register_next_step_handler(message, lambda msg: process_order_step(msg, size))
+
 
     def process_order_step(message, size):
         try:
@@ -66,7 +71,7 @@ def register(bot):
             cursor.execute("SELECT balance, name FROM users WHERE id = %s", (user_id,))
             result = cursor.fetchone()
             if not result:
-                bot.send_message(user_id, "משתמש לא נמצא.")
+                bot.send_message(user_id, "משתמש לא נמצא.", reply_markup=main_menu())
                 return
     
             balance, name = result
@@ -74,7 +79,10 @@ def register(bot):
             total = quantity * price
     
             if balance < total:
-                bot.send_message(user_id, f"אין לך מספיק יתרה.\nעלות ההזמנה: {total} ש\"ח\nהיתרה שלך: {balance} ש\"ח\n\n לטעינת יתרה אנא העבר כסף ב bit לשמואל ורולקר/n/n בטלפון: 0547665847")
+                bot.send_message(user_id,
+                    f"אין לך מספיק יתרה.\nעלות ההזמנה: {total} ש\"ח\nהיתרה שלך: {balance} ש\"ח",
+                    reply_markup=main_menu()
+                )
                 return
     
             now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -86,10 +94,16 @@ def register(bot):
             cursor.execute("UPDATE users SET balance = balance - %s WHERE id = %s", (total, user_id))
             conn.commit()
     
-            bot.send_message(user_id, f"הזמנה התקבלה: {quantity} תבניות מידה {size}\nחיוב: {total} ש\"ח")
+            bot.send_message(user_id, f"הזמנה התקבלה: {quantity} תבניות מידה {size}\nחיוב: {total} ש\"ח",
+                             reply_markup=main_menu())
     
+        except ValueError:
+            bot.send_message(message.chat.id, "❌ נא להזין מספר שלם בלבד.",
+                             reply_markup=main_menu())
         except Exception as e:
-            bot.send_message(message.chat.id, f"שגיאה: {e}")
+            bot.send_message(message.chat.id, f"שגיאה כללית: {e}",
+                             reply_markup=main_menu())
+
     
     @bot.message_handler(func=lambda m: m.text == "הזמנת תבניות")
     def order_eggs(message):
