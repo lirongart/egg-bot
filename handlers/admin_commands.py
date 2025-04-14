@@ -97,41 +97,28 @@ def register(bot):
     
             cursor.execute("SELECT name, size, quantity FROM orders WHERE fulfilled = 0")
             orders = cursor.fetchall()
-    
-            summary_text = "*📊 סיכום מצב הקופה:*\n\n"
-            user_orders = {}
-            size_prices = {'L': 36, 'XL': 39}
-    
-            for name, size, quantity in orders:
-                price = size_prices.get(size, 0)
-                user_orders[name] = user_orders.get(name, 0) + quantity * price
-    
-            for name, balance in users:
-                spent = user_orders.get(name, 0)
-                available = balance - spent
-                status = "✅" if available >= 0 else "❌"
-                summary_text += f"{status} {name} - יתרה: {balance} ש\"ח"
-                if spent > 0:
-                    summary_text += f" (בהמתנה: {spent} ש\"ח, פנוי: {available} ש\"ח)"
-                summary_text += "\n"
-    
-            bot.send_message(message.chat.id, summary_text, parse_mode="Markdown")
         except Exception as e:
-            bot.send_message(message.chat.id, f"שגיאה בסיכום: {e}") 
-            user_orders = {}
-            size_prices = {'L': 36, 'XL': 39}
-            for name, size, quantity in orders:
-                price = size_prices.get(size, 0)
-                user_orders[name] = user_orders.get(name, 0) + quantity * price
-            for name, balance in users:
-                spent = user_orders.get(name, 0)
-                available = balance - spent
-                status = "✅" if available >= 0 else "❌"
-                summary_text += f'{status} {name} - יתרה: {balance} ש"ח '
-                if spent > 0:
-                    summary_text += f'(בהמתנה: {spent} ש"ח, פנוי: {available} ש"ח)'
-                summary_text += "\n"
-            bot.send_message(message.chat.id, summary_text, parse_mode="Markdown")
+            bot.send_message(message.chat.id, f"שגיאה בטעינת נתונים: {e}")
+            return
+    
+        summary_text = "*📊 סיכום מצב הקופה:*\n\n"
+        user_orders = {}
+        size_prices = {'L': 36, 'XL': 39}
+    
+        for name, size, quantity in orders:
+            price = size_prices.get(size, 0)
+            user_orders[name] = user_orders.get(name, 0) + quantity * price
+    
+        for name, balance in users:
+            spent = user_orders.get(name, 0)
+            available = balance - spent
+            status = "✅" if available >= 0 else "❌"
+            summary_text += f"{status} {name} - יתרה: {balance} ש\"ח"
+            if spent > 0:
+                summary_text += f" (בהמתנה: {spent} ש\"ח, פנוי: {available} ש\"ח)"
+            summary_text += "\n"
+    
+        bot.send_message(message.chat.id, summary_text, parse_mode="Markdown")
 
         # ⬅️ מחיקת כל ההזמנות שלא סופקו (כפתור ביטול כל ההזמנות)
     @bot.message_handler(func=lambda m: m.text == "ביטול כל ההזמנות" and m.from_user.id == ADMIN_ID)
