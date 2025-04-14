@@ -56,9 +56,7 @@ def register(bot):
             return
         elif len(results) > 1:
             matches = ', '.join(name for _, name in results)
-            bot.send_message(message.chat.id, f"⚠️ נמצאו מספר התאמות:
-{matches}
-אנא דייק את שם המפקיד.")
+            bot.send_message(message.chat.id, f"⚠️ נמצאו מספר התאמות:{matches}אנא דייק את שם המפקיד.")
             return
 
         user_id, matched_name = results[0]
@@ -70,19 +68,19 @@ def register(bot):
         conn.commit()
 
         try:
-            bot.send_message(user_id, f"💰 הופקדו {amount} ש"ח לחשבונך. יתרתך עודכנה.")
+            bot.send_message(user_id, f'💰 הופקדו {amount} ש"ח לחשבונך. יתרתך עודכנה.')
         except Exception as e:
             bot.send_message(ADMIN_ID, f"⚠️ לא ניתן לשלוח למשתמש {user_id}. סיבה: {e}")
 
-        bot.send_message(message.chat.id, f"✅ ההפקדה עבור {matched_name} עודכנה בהצלחה ({amount} ש"ח).")
-        log(f"[BIT DEPOSIT] {matched_name} → {amount} ש"ח עודכן למשתמש {user_id}. לינק: {bit_url}")
+        bot.send_message(message.chat.id, f'✅ ההפקדה עבור {matched_name} עודכנה בהצלחה ({amount} ש"ח).')
+        log(f'[BIT DEPOSIT] {matched_name} → {amount} ש"ח עודכן למשתמש {user_id}. לינק: {bit_url}')
 
     # ⬅️ סך כל היתרות של כל המשתמשים יחד (כפתור בדיקת יתרות כוללת)
     @bot.message_handler(func=lambda m: m.text == "בדיקת יתרות כוללת" and m.from_user.id == ADMIN_ID)
     def check_total_balances(message):
         cursor.execute("SELECT SUM(balance) FROM users")
         total = cursor.fetchone()[0] or 0
-        bot.send_message(message.chat.id, f"💼 סך כל היתרות בקופה: {total} ש"ח")
+        bot.send_message(message.chat.id, f'💼 סך כל היתרות בקופה: {total} ש"ח')
 
     # ⬅️ סיכום כללי של יתרות מול הזמנות (כפתור סיכום כללי)
     @bot.message_handler(func=lambda m: m.text == "סיכום כללי" and m.from_user.id == ADMIN_ID)
@@ -91,7 +89,7 @@ def register(bot):
         users = cursor.fetchall()
         cursor.execute("SELECT name, size, quantity FROM orders WHERE fulfilled = 0")
         orders = cursor.fetchall()
-        summary_text = "*📊 סיכום מצב הקופה:*
+        summary_text = "*📊 סיכום מצב הקופה:*\n\n"
 
 "
         user_orders = {}
@@ -103,9 +101,9 @@ def register(bot):
             spent = user_orders.get(name, 0)
             available = balance - spent
             status = "✅" if available >= 0 else "❌"
-            summary_text += f"{status} {name} - יתרה: {balance} ש"ח "
+            summary_text += f'{status} {name} - יתרה: {balance} ש"ח '
             if spent > 0:
-                summary_text += f"(בהמתנה: {spent} ש"ח, פנוי: {available} ש"ח)"
+                summary_text += f'(בהמתנה: {spent} ש"ח, פנוי: {available} ש"ח)'
             summary_text += "\n"
         bot.send_message(message.chat.id, summary_text, parse_mode="Markdown")
 
@@ -124,7 +122,7 @@ def register(bot):
         if not orders:
             bot.send_message(message.chat.id, "אין הזמנות ממתינות.")
         else:
-            response = "📋 הזמנות ממתינות:
+            response = "📋 הזמנות ממתינות:\n\n"
 
 "
             for order_id, name, size, quantity in orders:
@@ -153,4 +151,4 @@ def register(bot):
 
         cursor.execute("SELECT SUM(actual_total) FROM orders WHERE DATE(fulfilled_date) = CURRENT_DATE")
         total_sum = cursor.fetchone()[0] or 0
-        bot.send_message(message.chat.id, f"✅ כל ההזמנות עודכנו כסופקו.\n💰 סה\"כ חיוב כולל היום: {total_sum} ש\"ח")
+        bot.send_message(message.chat.id, f'✅ כל ההזמנות עודכנו כסופקו.\n💰 סה"כ חיוב כולל היום: {total_sum} ש"ח')
