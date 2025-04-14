@@ -248,6 +248,7 @@ def register(bot):
         elif call.data == "cmd_me":
             bot.send_message(call.message.chat.id, f"🆔 Telegram ID שלך: {call.from_user.id}")
 
+
     @bot.message_handler(commands=['fulfill'])
     def fulfill_order(message):
         if message.from_user.id != ADMIN_ID:
@@ -256,14 +257,14 @@ def register(bot):
         try:
             parts = message.text.split()
             if len(parts) != 3:
-                bot.send_message(message.chat.id, "פורמט שגוי. השתמש: /fulfill מספר_הזמנה כמות_שסופקה")
+                bot.send_message(message.chat.id, "⚠️ פורמט שגוי. השתמש:\n/fulfill מספר_הזמנה כמות_שסופקה", reply_markup=admin_main_menu())
                 return
     
             order_id = int(parts[1])
             qty = int(parts[2])
     
             if qty < 0:
-                bot.send_message(message.chat.id, "❌ כמות שסופקה לא יכולה להיות שלילית.")
+                bot.send_message(message.chat.id, "❌ כמות שסופקה לא יכולה להיות שלילית.", reply_markup=admin_main_menu())
                 return
     
             cursor.execute("""
@@ -272,12 +273,13 @@ def register(bot):
             """, (order_id,))
             order = cursor.fetchone()
             if not order:
-                bot.send_message(message.chat.id, "❌ הזמנה לא קיימת או כבר סופקה.")
+                bot.send_message(message.chat.id, "❌ הזמנה לא קיימת או כבר סופקה.", reply_markup=admin_main_menu())
                 return
     
             user_id, name, ordered_qty, size = order
             if qty > ordered_qty:
-                bot.send_message(message.chat.id, f"הוזמנו רק {ordered_qty} תבניות. לא ניתן לעדכן יותר.")
+                bot.send_message(message.chat.id, f"⚠️ הוזמנו רק {ordered_qty} תבניות. לא ניתן לעדכן יותר.",
+                                 reply_markup=admin_main_menu())
                 return
     
             price = 36 if size == 'L' else 39
@@ -298,13 +300,16 @@ def register(bot):
     
             conn.commit()
     
-            bot.send_message(message.chat.id, f"הזמנה #{order_id} עודכנה ({qty}/{ordered_qty})\nחיוב: {actual_total} ש\"ח")
-            bot.send_message(user_id, f"📦 ההזמנה שלך #{order_id} סופקה: {qty}/{ordered_qty} תבניות {size}.\nחיוב: {actual_total} ש\"ח")
+            bot.send_message(message.chat.id,
+                             f"✅ ההזמנה #{order_id} עודכנה ({qty}/{ordered_qty})\nחיוב בפועל: {actual_total} ש\"ח",
+                             reply_markup=admin_main_menu())
+            bot.send_message(user_id,
+                             f"📦 ההזמנה שלך #{order_id} סופקה: {qty}/{ordered_qty} תבניות {size}.\n💰 חיוב: {actual_total} ש\"ח")
     
         except Exception as e:
-            bot.send_message(message.chat.id, f"שגיאה: {e}")
-    
-    
+            bot.send_message(message.chat.id, f"❌ שגיאה כללית: {e}", reply_markup=admin_main_menu())
+            
+
     @bot.message_handler(commands=['cancel'])
     def cancel_order(message):
         if message.from_user.id != ADMIN_ID:
@@ -313,7 +318,7 @@ def register(bot):
         try:
             parts = message.text.split()
             if len(parts) != 2:
-                bot.send_message(message.chat.id, "פורמט שגוי. השתמש: /cancel מספר_הזמנה")
+                bot.send_message(message.chat.id, "⚠️ פורמט שגוי. השתמש:\n/cancel מספר_הזמנה", reply_markup=admin_main_menu())
                 return
     
             order_id = int(parts[1])
@@ -321,7 +326,7 @@ def register(bot):
             cursor.execute("SELECT user_id, name, quantity, size FROM orders WHERE id = %s AND fulfilled = 0", (order_id,))
             order = cursor.fetchone()
             if not order:
-                bot.send_message(message.chat.id, "❌ לא נמצאה הזמנה לביטול.")
+                bot.send_message(message.chat.id, "❌ לא נמצאה הזמנה לביטול.", reply_markup=admin_main_menu())
                 return
     
             user_id, name, quantity, size = order
@@ -332,8 +337,12 @@ def register(bot):
             cursor.execute("UPDATE users SET balance = balance + %s WHERE id = %s", (refund, user_id))
             conn.commit()
     
-            bot.send_message(message.chat.id, f"הזמנה #{order_id} של {name} בוטלה.\nהחזר: {refund} ש\"ח")
-            bot.send_message(user_id, f"❌ ההזמנה שלך #{order_id} בוטלה.\n💸 החזר: {refund} ש\"ח")
+            bot.send_message(message.chat.id,
+                             f"❌ ההזמנה #{order_id} של {name} בוטלה.\n💸 החזר: {refund} ש\"ח",
+                             reply_markup=admin_main_menu())
+            bot.send_message(user_id,
+                             f"❌ ההזמנה שלך #{order_id} בוטלה.\n💸 החזר: {refund} ש\"ח")
     
         except Exception as e:
-            bot.send_message(message.chat.id, f"שגיאה בביטול הזמנה: {e}")
+            bot.send_message(message.chat.id, f"❌ שגיאה בביטול ההזמנה: {e}", reply_markup=admin_main_menu())
+    
