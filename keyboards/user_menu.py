@@ -2,6 +2,7 @@ from telebot.types import ReplyKeyboardMarkup
 
 def main_menu():
     markup = ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.row("הזמנת תבניות")
-    markup.row("בדיקת יתרה", "ההזמנות שלי")
+    markup.row(KeyboardButton("הזמנת תבניות"), KeyboardButton("בדיקת יתרה"))
+    markup.row(KeyboardButton("ההזמנות שלי"), KeyboardButton("❌ ביטול ההזמנות שלי"))
     return markup
+

@@ -1,7 +1,7 @@
 from keyboards.user_menu import main_menu
 from keyboards.admin_menu import admin_main_menu
 from utils.validators import is_admin
-from datetime import datetime
+from utils.logger import log
 from config import DATABASE_URL
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
 import psycopg2
@@ -183,6 +183,67 @@ def register(bot):
             )
     
         bot.send_message(user_id, response)
+        
+    from keyboards.user_cancel_menu import build_cancel_menu, confirm_cancel_menu
+
+    @bot.message_handler(func=lambda m: m.text == "❌ ביטול ההזמנות שלי")
+    def cancel_my_orders_menu(message):
+        user_id = message.from_user.id
+        cursor.execute("""
+            SELECT id, quantity, size FROM orders
+            WHERE user_id = %s AND fulfilled = 0
+            ORDER BY ordered_date
+        """, (user_id,))
+        orders = cursor.fetchall()
+    
+        if not orders:
+            bot.send_message(user_id, "אין לך הזמנות שניתן לבטל.")
+            return
+    
+        bot.send_message(user_id, "בחר איזו הזמנה לבטל:", reply_markup=build_cancel_menu(orders))
+    
+    @bot.callback_query_handler(func=lambda c: c.data.startswith("cancel_me_"))
+    def ask_cancel_confirm(call):
+        order_id = int(call.data.split("_")[-1])
+        bot.answer_callback_query(call.id)
+        bot.send_message(call.message.chat.id, f"האם לבטל את ההזמנה #{order_id}?", reply_markup=confirm_cancel_menu(order_id))
+    
+    @bot.callback_query_handler(func=lambda c: c.data.startswith("confirm_cancel_"))
+    def execute_user_cancel(call):
+        order_id = int(call.data.split("_")[-1])
+        user_id = call.from_user.id
+    
+        # שליפת פרטי ההזמנה
+        cursor.execute("""
+            SELECT quantity, size FROM orders
+            WHERE id = %s AND user_id = %s AND fulfilled = 0
+        """, (order_id, user_id))
+        order = cursor.fetchone()
+    
+        if not order:
+            bot.answer_callback_query(call.id, "❌ ההזמנה לא קיימת או כבר סופקה.")
+            return
+    
+        qty, size = order
+        price = 36 if size == 'L' else 39
+        refund = qty * price
+    
+        cursor.execute("DELETE FROM orders WHERE id = %s", (order_id,))
+        cursor.execute("UPDATE users SET balance = balance + %s WHERE id = %s", (refund, user_id))
+        conn.commit()
+    
+        bot.edit_message_text(
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            text=f"✅ ההזמנה #{order_id} בוטלה.\n💸 זיכוי: {refund} ש\"ח"
+        )
+        # בתוך הפונקציה execute_user_cancel, לפני conn.commit():
+        log(f"[USER CANCEL] {user_id} ביטל הזמנה #{order_id}, זיכוי {refund} ש\"ח", category="admin")
+    
+    @bot.callback_query_handler(func=lambda c: c.data == "cancel_ignore")
+    def ignore_cancel(call):
+        bot.answer_callback_query(call.id, "הביטול בוטל ✅")
+    
         
     # 📌 שליחת קבלה (בשלב זה לא פעיל בתפריט)
     # @bot.message_handler(func=lambda m: m.text == "שליחת קבלה")
