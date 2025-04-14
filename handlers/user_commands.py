@@ -55,9 +55,9 @@ def register(bot):
             bot.send_message(message.chat.id, "בחר פעולה:", reply_markup=main_menu())
 
     def ask_quantity_step(message, size):
-    user_id = message.from_user.id
-    bot.send_message(user_id, f"איזו כמות של תבניות {size} תרצה להזמין?")
-    bot.register_next_step_handler(message, lambda msg: process_order_step(msg, size))
+        user_id = message.from_user.id
+        bot.send_message(user_id, f"איזו כמות של תבניות {size} תרצה להזמין?")
+        bot.register_next_step_handler(message, lambda msg: process_order_step(msg, size))
 
     def process_order_step(message, size):
         try:
