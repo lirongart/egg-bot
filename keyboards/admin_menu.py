@@ -1,8 +1,10 @@
-from telebot.types import ReplyKeyboardMarkup
+from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 
 def admin_main_menu():
     markup = ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.row("הפקדה מ־bit", "בדיקת יתרות כוללת")
-    markup.row("ניהול הזמנות", "סיכום כללי")
-    markup.row("אספקה גורפת", "ביטול כל ההזמנות")
+    markup.row(KeyboardButton("הפקדה מ־bit"))
+    markup.row(KeyboardButton("ביטול כל ההזמנות"), KeyboardButton("אספקה גורפת"))
+	markup.row(KeyboardButton("בדיקת יתרות כוללת"), KeyboardButton("סיכום כללי"))
+    markup.row(KeyboardButton("פקודות נוספות"), KeyboardButton("ניהול הזמנות"))
     return markup
+

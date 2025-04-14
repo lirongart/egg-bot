@@ -1,5 +1,6 @@
 from config import ADMIN_ID, DATABASE_URL
 from keyboards.admin_menu import admin_main_menu
+from keyboards.extra_admin import extra_admin_menu
 from utils.logger import log
 import psycopg2
 from datetime import datetime
@@ -75,80 +76,264 @@ def register(bot):
         bot.send_message(message.chat.id, f'✅ ההפקדה עבור {matched_name} עודכנה בהצלחה ({amount} ש"ח).')
         log(f'[BIT DEPOSIT] {matched_name} → {amount} ש"ח עודכן למשתמש {user_id}. לינק: {bit_url}')
 
-    # ⬅️ סך כל היתרות של כל המשתמשים יחד (כפתור בדיקת יתרות כוללת)
+
+        # ⬅️ סך כל היתרות של כל המשתמשים יחד (כפתור בדיקת יתרות כוללת)
     @bot.message_handler(func=lambda m: m.text == "בדיקת יתרות כוללת" and m.from_user.id == ADMIN_ID)
     def check_total_balances(message):
-        cursor.execute("SELECT SUM(balance) FROM users")
-        total = cursor.fetchone()[0] or 0
-        bot.send_message(message.chat.id, f'💼 סך כל היתרות בקופה: {total} ש"ח')
+        try:
+            cursor.execute("SELECT SUM(balance) FROM users")
+            total = cursor.fetchone()[0] or 0
+            bot.send_message(message.chat.id, f'💼 סך כל היתרות בקופה: {total:.2f} ש"ח')
+        except Exception as e:
+            bot.send_message(message.chat.id, f"שגיאה: {e}")
+
 
     # ⬅️ סיכום כללי של יתרות מול הזמנות (כפתור סיכום כללי)
     @bot.message_handler(func=lambda m: m.text == "סיכום כללי" and m.from_user.id == ADMIN_ID)
     def admin_summary(message):
-        cursor.execute("SELECT name, balance FROM users ORDER BY name")
-        users = cursor.fetchall()
-        cursor.execute("SELECT name, size, quantity FROM orders WHERE fulfilled = 0")
-        orders = cursor.fetchall()
-        summary_text = "*📊 סיכום מצב הקופה:*\n\n"
+        try:
+            cursor.execute("SELECT name, balance FROM users ORDER BY name")
+            users = cursor.fetchall()
+    
+            cursor.execute("SELECT name, size, quantity FROM orders WHERE fulfilled = 0")
+            orders = cursor.fetchall()
+    
+            summary_text = "*📊 סיכום מצב הקופה:*\n\n"
+            user_orders = {}
+            size_prices = {'L': 36, 'XL': 39}
+    
+            for name, size, quantity in orders:
+                price = size_prices.get(size, 0)
+                user_orders[name] = user_orders.get(name, 0) + quantity * price
+    
+            for name, balance in users:
+                spent = user_orders.get(name, 0)
+                available = balance - spent
+                status = "✅" if available >= 0 else "❌"
+                summary_text += f"{status} {name} - יתרה: {balance} ש\"ח"
+                if spent > 0:
+                    summary_text += f" (בהמתנה: {spent} ש\"ח, פנוי: {available} ש\"ח)"
+                summary_text += "\n"
+    
+            bot.send_message(message.chat.id, summary_text, parse_mode="Markdown")
+        except Exception as e:
+            bot.send_message(message.chat.id, f"שגיאה בסיכום: {e}") 
+            user_orders = {}
+            size_prices = {'L': 36, 'XL': 39}
+            for name, size, quantity in orders:
+                price = size_prices.get(size, 0)
+                user_orders[name] = user_orders.get(name, 0) + quantity * price
+            for name, balance in users:
+                spent = user_orders.get(name, 0)
+                available = balance - spent
+                status = "✅" if available >= 0 else "❌"
+                summary_text += f'{status} {name} - יתרה: {balance} ש"ח '
+                if spent > 0:
+                    summary_text += f'(בהמתנה: {spent} ש"ח, פנוי: {available} ש"ח)'
+                summary_text += "\n"
+            bot.send_message(message.chat.id, summary_text, parse_mode="Markdown")
 
-"
-        user_orders = {}
-        size_prices = {'L': 36, 'XL': 39}
-        for name, size, quantity in orders:
-            price = size_prices.get(size, 0)
-            user_orders[name] = user_orders.get(name, 0) + quantity * price
-        for name, balance in users:
-            spent = user_orders.get(name, 0)
-            available = balance - spent
-            status = "✅" if available >= 0 else "❌"
-            summary_text += f'{status} {name} - יתרה: {balance} ש"ח '
-            if spent > 0:
-                summary_text += f'(בהמתנה: {spent} ש"ח, פנוי: {available} ש"ח)'
-            summary_text += "\n"
-        bot.send_message(message.chat.id, summary_text, parse_mode="Markdown")
-
-    # ⬅️ מחיקת כל ההזמנות שלא סופקו (כפתור ביטול כל ההזמנות)
+        # ⬅️ מחיקת כל ההזמנות שלא סופקו (כפתור ביטול כל ההזמנות)
     @bot.message_handler(func=lambda m: m.text == "ביטול כל ההזמנות" and m.from_user.id == ADMIN_ID)
     def cancel_all_orders(message):
-        cursor.execute("DELETE FROM orders WHERE fulfilled = 0")
-        conn.commit()
-        bot.send_message(message.chat.id, "❌ כל ההזמנות הממתינות בוטלו.")
+        try:
+            cursor.execute("DELETE FROM orders WHERE fulfilled = 0")
+            conn.commit()
+            bot.send_message(message.chat.id, "❌ כל ההזמנות הממתינות בוטלו.")
+        except Exception as e:
+            bot.send_message(message.chat.id, f"שגיאה בביטול הזמנות: {e}")
+
 
     # ⬅️ הצגת כל ההזמנות הממתינות לאספקה (כפתור ניהול הזמנות)
     @bot.message_handler(func=lambda m: m.text == "ניהול הזמנות" and m.from_user.id == ADMIN_ID)
     def manage_orders(message):
-        cursor.execute("SELECT id, name, size, quantity FROM orders WHERE fulfilled = 0 ORDER BY ordered_date")
-        orders = cursor.fetchall()
-        if not orders:
-            bot.send_message(message.chat.id, "אין הזמנות ממתינות.")
-        else:
+        try:
+            cursor.execute("""
+                SELECT id, name, size, quantity, ordered_date
+                FROM orders
+                WHERE fulfilled = 0
+                ORDER BY ordered_date
+            """)
+            orders = cursor.fetchall()
+    
+            if not orders:
+                bot.send_message(message.chat.id, "אין הזמנות ממתינות.")
+                return
+    
             response = "📋 הזמנות ממתינות:\n\n"
-
-"
-            for order_id, name, size, quantity in orders:
-                response += f"#{order_id} - {name}: {quantity} ({size})\n"
-            response += "\nלספק הזמנה, שלח: /fulfill order_id כמות_שסופקה"
+            for order_id, name, size, quantity, ordered_at in orders:
+                response += f"#{order_id} - {name}: {quantity} תבניות ({size})\nתאריך הזמנה: {ordered_at}\n\n"
+    
+            response += "לספק הזמנה, שלח:\n/fulfill [מספר_הזמנה] [כמות_שסופקה]"
             bot.send_message(message.chat.id, response)
+        except Exception as e:
+            bot.send_message(message.chat.id, f"שגיאה בניהול הזמנות: {e}")
+
 
     # ⬅️ סימון כל ההזמנות כסופקו לפי הכמות שהוזמנה (כפתור אספקה גורפת)
     @bot.message_handler(func=lambda m: m.text == "אספקה גורפת" and m.from_user.id == ADMIN_ID)
     def fulfill_all_orders(message):
-        cursor.execute("SELECT id, user_id, quantity, size FROM orders WHERE fulfilled = 0")
-        orders = cursor.fetchall()
-        if not orders:
-            bot.send_message(message.chat.id, "אין הזמנות פעילות לעדכון.")
+        try:
+            cursor.execute("SELECT id, user_id, quantity, size FROM orders WHERE fulfilled = 0")
+            orders = cursor.fetchall()
+            if not orders:
+                bot.send_message(message.chat.id, "אין הזמנות פעילות לעדכון.")
+                return
+    
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            size_prices = {'L': 36, 'XL': 39}
+            updated_order_ids = []
+    
+            for order_id, uid, qty, size in orders:
+                price = size_prices.get(size, 0)
+                total = qty * price
+    
+                cursor.execute("""
+                    UPDATE orders
+                    SET fulfilled = 1,
+                        fulfilled_quantity = %s,
+                        fulfilled_date = %s,
+                        actual_total = %s
+                    WHERE id = %s
+                """, (qty, now, total, order_id))
+    
+                updated_order_ids.append(order_id)
+                
+            # שליחת הודעה ללקוח
+                # שליפת שם הלקוח
+                cursor.execute("SELECT name FROM users WHERE id = %s", (uid,))
+                name_result = cursor.fetchone()
+                name = name_result[0] if name_result else "לקוח"
+                
+                try:
+                    bot.send_message(uid,
+                        f"👋 שלום {name}!\n"
+                        f"📦 ההזמנה שלך סופקה במלואה:\n"
+                        f"🔢 מספר הזמנה: {order_id}\n"
+                        f"🥚 כמות: {qty} תבניות מידה {size}\n"
+                        f"💰 חיוב: {total:.2f} ש\"ח\n"
+                        f"✅ תודה ולהתראות!"
+                    )
+                except Exception as e:
+                    bot.send_message(ADMIN_ID, f"⚠️ שגיאה בשליחת הודעה ללקוח {uid} על הזמנה #{order_id}: {e}")
+    
+
+
+            conn.commit()
+    
+            # שלב הסיכום — רק לפי ההזמנות שסופקו כעת
+            format_ids = ','.join(str(i) for i in updated_order_ids)
+            cursor.execute(f"SELECT SUM(actual_total) FROM orders WHERE id IN ({format_ids})")
+            total_sum = cursor.fetchone()[0] or 0
+    
+            bot.send_message(message.chat.id, f'✅ {len(updated_order_ids)} הזמנות עודכנו כסופקו.\n💰 סה"כ חיוב כולל: {total_sum:.2f} ש"ח')
+    
+        except Exception as e:
+            bot.send_message(message.chat.id, f"שגיאה באספקה גורפת: {e}")
+
+    # ⬅️ כפתור פקודות נוספות - פותח תפריט אינטראקטיבי
+    @bot.message_handler(func=lambda m: m.text == "פקודות נוספות" and m.from_user.id == ADMIN_ID)
+    def extra_commands(message):
+        bot.send_message(message.chat.id, "בחר פקודה נוספת:", reply_markup=extra_admin_menu())
+
+    # ⬅️ תגובה ללחיצה על פקודות נוספות מהתפריט האינטראקטיבי
+    @bot.callback_query_handler(func=lambda call: call.data.startswith("cmd_"))
+    def handle_admin_inline_cmds(call):
+        bot.answer_callback_query(call.id)
+    
+        if call.data == "cmd_fulfill":
+            bot.send_message(call.message.chat.id, "📥 כתוב את הפקודה: /fulfill מספר_הזמנה כמות")
+        elif call.data == "cmd_cancel":
+            bot.send_message(call.message.chat.id, "❌ כתוב את הפקודה: /cancel מספר_הזמנה")
+        elif call.data == "cmd_me":
+            bot.send_message(call.message.chat.id, f"🆔 Telegram ID שלך: {call.from_user.id}")
+
+    @bot.message_handler(commands=['fulfill'])
+    def fulfill_order(message):
+        if message.from_user.id != ADMIN_ID:
             return
-
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        for order_id, uid, qty, size in orders:
-            price = 36 if size == 'L' else 39
-            total = qty * price
+    
+        try:
+            parts = message.text.split()
+            if len(parts) != 3:
+                bot.send_message(message.chat.id, "פורמט שגוי. השתמש: /fulfill מספר_הזמנה כמות_שסופקה")
+                return
+    
+            order_id = int(parts[1])
+            qty = int(parts[2])
+    
+            if qty < 0:
+                bot.send_message(message.chat.id, "❌ כמות שסופקה לא יכולה להיות שלילית.")
+                return
+    
             cursor.execute("""
-                UPDATE orders SET fulfilled = 1, fulfilled_quantity = %s, fulfilled_date = %s, actual_total = %s
+                SELECT user_id, name, quantity, size FROM orders
+                WHERE id = %s AND fulfilled = 0
+            """, (order_id,))
+            order = cursor.fetchone()
+            if not order:
+                bot.send_message(message.chat.id, "❌ הזמנה לא קיימת או כבר סופקה.")
+                return
+    
+            user_id, name, ordered_qty, size = order
+            if qty > ordered_qty:
+                bot.send_message(message.chat.id, f"הוזמנו רק {ordered_qty} תבניות. לא ניתן לעדכן יותר.")
+                return
+    
+            price = 36 if size == 'L' else 39
+            actual_total = qty * price
+            refund = (ordered_qty - qty) * price
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+            cursor.execute("""
+                UPDATE orders SET fulfilled = 1,
+                    fulfilled_quantity = %s,
+                    fulfilled_date = %s,
+                    actual_total = %s
                 WHERE id = %s
-            """, (qty, now, total, order_id))
-        conn.commit()
-
-        cursor.execute("SELECT SUM(actual_total) FROM orders WHERE DATE(fulfilled_date) = CURRENT_DATE")
-        total_sum = cursor.fetchone()[0] or 0
-        bot.send_message(message.chat.id, f'✅ כל ההזמנות עודכנו כסופקו.\n💰 סה"כ חיוב כולל היום: {total_sum} ש"ח')
+            """, (qty, now, actual_total, order_id))
+    
+            if refund > 0:
+                cursor.execute("UPDATE users SET balance = balance + %s WHERE id = %s", (refund, user_id))
+    
+            conn.commit()
+    
+            bot.send_message(message.chat.id, f"הזמנה #{order_id} עודכנה ({qty}/{ordered_qty})\nחיוב: {actual_total} ש\"ח")
+            bot.send_message(user_id, f"📦 ההזמנה שלך #{order_id} סופקה: {qty}/{ordered_qty} תבניות {size}.\nחיוב: {actual_total} ש\"ח")
+    
+        except Exception as e:
+            bot.send_message(message.chat.id, f"שגיאה: {e}")
+    
+    
+    @bot.message_handler(commands=['cancel'])
+    def cancel_order(message):
+        if message.from_user.id != ADMIN_ID:
+            return
+    
+        try:
+            parts = message.text.split()
+            if len(parts) != 2:
+                bot.send_message(message.chat.id, "פורמט שגוי. השתמש: /cancel מספר_הזמנה")
+                return
+    
+            order_id = int(parts[1])
+    
+            cursor.execute("SELECT user_id, name, quantity, size FROM orders WHERE id = %s AND fulfilled = 0", (order_id,))
+            order = cursor.fetchone()
+            if not order:
+                bot.send_message(message.chat.id, "❌ לא נמצאה הזמנה לביטול.")
+                return
+    
+            user_id, name, quantity, size = order
+            price = 36 if size == 'L' else 39
+            refund = quantity * price
+    
+            cursor.execute("DELETE FROM orders WHERE id = %s", (order_id,))
+            cursor.execute("UPDATE users SET balance = balance + %s WHERE id = %s", (refund, user_id))
+            conn.commit()
+    
+            bot.send_message(message.chat.id, f"הזמנה #{order_id} של {name} בוטלה.\nהחזר: {refund} ש\"ח")
+            bot.send_message(user_id, f"❌ ההזמנה שלך #{order_id} בוטלה.\n💸 החזר: {refund} ש\"ח")
+    
+        except Exception as e:
+            bot.send_message(message.chat.id, f"שגיאה בביטול הזמנה: {e}")
