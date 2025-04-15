@@ -1,84 +1,110 @@
-# 🥚 EggBot PRO – גרסה 2
+# 🥚 EggBot PRO v2.0.1 – Optimized Architecture Release
 
-בוט טלגרם חכם לניהול קופה קבוצתית ורכישות תבניות ביצים 💸🐣  
-כולל ממשק מנהל מלא, לוגיקה מדויקת של הזמנות, ניהול יתרות, הפקדות bit, ו־QA אוטומטי!
-
----
-
-## 🚀 מה חדש בגרסה 2?
-
-- 🎛 ממשק מודולרי מלא – קוד מסודר לפי תיקיות (handlers, keyboards, utils, etc.)
-- 🧠 תפריט אינטראקטיבי מותאם לפי תפקיד (משתמש רגיל / מנהל)
-- 📥 הפקדות באמצעות bit – ניתוח אוטומטי של הודעת SMS ועדכון יתרות
-- 🧾 ניהול הזמנות חכם – כולל אספקה חלקית, ביטולים, סיכומים ויתרות
-- 📊 תיעוד Google Sheets של בדיקות QA
-- 🔒 בדיקות שגיאה, פורמטים שגויים, וחוויית משתמש חלקה
+מערכת ניהול הזמנות וביצוע תשלומים אוטומטית בטלגרם, עם תמיכה מלאה במנהל ומשתמשים, אינטגרציה עם bit, עיצוב מודולרי, ולוגיקה עסקית מתקדמת.
 
 ---
 
-## 🧱 מבנה תיקיות
+## 🚀 מה חדש ב־v2.0.1
 
-```
-📦eggbot_pro_v2
-├── main.py                     # קובץ ההפעלה
-├── config.py                   # משתני סביבה ו־ENV
-├── requirements.txt            # ספריות נדרשות
-│
-├── handlers/
-│   ├── user_commands.py        # כל פעולות המשתמש
-│   ├── admin_commands.py       # פעולות הניהול
-│   └── ...
-│
-├── keyboards/
-│   ├── user_menu.py            # תפריט משתמש
-│   ├── admin_menu.py           # תפריט מנהל
-│   └── extra_admin.py          # פקודות נוספות (inline)
-│
-├── utils/
-│   ├── logger.py               # לוגים
-│   └── validators.py           # בדיקת is_admin
-│
-└── qa/
-    └── qa_runner_pro.py        # בדיקות אוטומטיות ל־QA
-```
+- ✅ **אופטימיזציה מלאה של הקוד**: החלפה ל־`execute_query`, טיפול חריגות עקבי עם `@safe_execution`, ומנעולי משתמש `@user_lock`
+- 🧩 **מודולריות מקצועית**: קוד מפורק לתיקיות `handlers`, `keyboards`, `utils` – קל לתחזוקה והרחבה
+- 🔐 **אבטחת קלט**: ולידציות חכמות, סניטיזציה לשמות, זיהוי הודעות bit תקינות בלבד
+- 🧪 **תמיכה מלאה ב־QA**: אינטגרציה עם Google Sheets, כולל סקריפטים להרצת בדיקות מרובות משתמשים
 
 ---
 
-## 🛠 התקנה מקומית
+## 🧠 יכולות עיקריות
 
-```bash
-git clone https://github.com/yourname/eggbot_pro_v2.git
-cd eggbot_pro_v2
-pip install -r requirements.txt
-python main.py
-```
+### 👤 למשתמש רגיל
+- הזמנת תבניות ביצים לפי מידה וכמות
+- בדיקת יתרה
+- צפייה בהזמנות פעילות
+- ביטול עצמאי של הזמנות ממתינות
+- תפריט אינטראקטיבי פשוט בעברית
 
-🔐 ודא שהגדרת את משתני הסביבה:
-- `TELEGRAM_BOT_TOKEN`
-- `ADMIN_TELEGRAM_ID`
-- `DATABASE_URL`
-- `GOOGLE_SHEET_ID`
-- `GOOGLE_SERVICE_ACCOUNT_FILE`
-
----
-
-## 🧪 הרצת QA אוטומטית
-
-```bash
-python qa/qa_runner_pro.py
-```
-
-התוצאות נשלחות ישירות ל־Google Sheets!
+### 🛠 למנהל
+- תפריט מנהל אינטראקטיבי (כולל כפתור פקודות נוספות)
+- הפקדה אוטומטית מ־bit (באמצעות הודעת SMS)
+- ניהול מלא של ההזמנות:
+  - אספקה גורפת או פרטנית
+  - ביטול כללי או לפי מזהה
+  - ניתוח כללי של יתרות מול התחייבויות
+- לוגים אוטומטיים (admin log / bit log)
 
 ---
 
-## 🧑‍💻 תודות
+## 🧰 טכנולוגיות וכלים
 
-פיתוח: **לירון**  
-הכוונה טכנית, QA, ותיעוד: **ChatGPT שותף פיתוח מלא 🤝**
+- `python-telegram-bot` + `pyTelegramBotAPI`
+- PostgreSQL
+- Flask (לרנדר)
+- Google Sheets API + gspread
+- Telethon (לבדיקות אוטומטיות)
+- Render – ענן להפעלה 24/7
 
 ---
 
-## 📜 רישיון
+## 🧱 מבנה הפרויקט
 
-MIT License – חופשי לשימוש, לשכפל, ולשדרג.
+├── main.py 
+├── .env (לא ב־repo, מאוחסן באופן מאובטח)
+├── handlers/ │ ├── user_commands.py │ └── admin_commands.py
+├── keyboards/ │ 
+├── user_menu.py
+│ └── admin_menu.py 
+├── utils/ │ ├── db_utils.py │ ├── thread_safety.py │ ├── input_validators.py │ ├── exception_handler.py │ └── logger.py ├── logs/ │ ├── bit_log.txt │ └── admin_actions.txt
+├── requirements.txt 
+└── README.md
+
+
+---
+
+## ⚙️ הגדרת קובץ `.env` לדוגמה
+
+```env
+TELEGRAM_BOT_TOKEN=your_bot_token
+ADMIN_TELEGRAM_ID=123456789
+DATABASE_URL=postgresql://user:password@host:port/dbname
+GOOGLE_SHEET_ID=spreadsheet_id_here
+GOOGLE_SERVICE_ACCOUNT_FILE=credentials.json
+
+ בדיקות QA
+כל הבדיקות מריצות תרחישים ידועים
+
+תוצאות נרשמות אוטומטית לגיליון Google Sheets
+
+תמיכה בסימולציה של 3 משתמשים במקביל (Telethon)
+
+🛡️ אבטחה והתמודדות עם עומסים
+הגנה על פעולות רגישות עם מנעולים לפי משתמש (@user_lock)
+
+שימוש ב־safe SQL עם פרמטרים
+
+סניטיזציה לקלטים קריטיים
+
+pool של חיבורי DB (תמיכה ב־multithreading)
+
+📦 תוכניות עתידיות (v2.1.x+)
+ממשק ויזואלי מתקדם למנהל (תפריט גרפי)
+
+ניהול יתרות לפי קבוצות
+
+התממשקות עם מערכות תשלומים נוספות (לצד bit)
+
+תזכורות אוטומטיות להזמנות פתוחות
+
+חיבור לממשק ניהול מבוסס דפדפן (Dashboard)
+
+📜 רישיון
+MIT License
+
+נוצר באהבה ❤ ע״י [לירון] בעזרת ChatGPT
+
+
+---
+
+💡 **טיפ לסיום**: כדאי גם להוסיף Badge בראש ה־README כמו:
+
+```markdown
+![Render Status](https://img.shields.io/badge/render-deployed-brightgreen)
+![Version](https://img.shields.io/badge/version-2.0.1-blue)
