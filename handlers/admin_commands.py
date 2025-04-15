@@ -2,8 +2,8 @@ from config import ADMIN_ID, DATABASE_URL
 from keyboards.admin_menu import admin_main_menu
 from keyboards.extra_admin import extra_admin_menu
 from utils.logger import log
-import psycopg2
 from datetime import datetime
+import psycopg2
 import re
 
 conn = psycopg2.connect(DATABASE_URL)
