@@ -1,4 +1,4 @@
-from telebot.types import ReplyKeyboardMarkup
+from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 
 def main_menu():
     markup = ReplyKeyboardMarkup(resize_keyboard=True)
