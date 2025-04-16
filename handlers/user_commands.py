@@ -10,7 +10,7 @@ from utils.exception_handler import safe_execution
 from utils.thread_safety import user_lock
 from datetime import datetime
 
-def (bot):
+def register(bot):
 
     @bot.message_handler(commands=['start'])
     @safe_execution("שגיאה בתחילת רישום")
