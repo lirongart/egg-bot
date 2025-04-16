@@ -59,6 +59,24 @@ def (bot):
         else:
             bot.send_message(message.chat.id, "בחר פעולה:", reply_markup=main_menu())
 
+    @bot.message_handler(func=lambda m: m.text == "❌ ביטול ההזמנות שלי")
+    @user_lock("order")
+    @safe_execution("שגיאה בטעינת תפריט ביטול ההזמנות")
+    def show_cancel_menu(message):
+        user_id = message.from_user.id
+        cursor = execute_query(
+            "SELECT id, size, quantity FROM orders WHERE user_id = %s AND fulfilled = 0",
+            (user_id,), fetch='all'
+        )
+    
+        if not cursor:
+            bot.send_message(user_id, "אין הזמנות ממתינות לביטול.")
+            return
+    
+        from keyboards.user_cancel_menu import generate_cancel_menu
+        bot.send_message(user_id, "בחר את ההזמנה שברצונך לבטל:", reply_markup=generate_cancel_menu(cursor))
+   
+    
     @bot.message_handler(func=lambda m: m.text == "הזמנת תבניות")
     def order_eggs(message):
         markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
