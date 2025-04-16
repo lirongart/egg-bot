@@ -83,28 +83,28 @@ def register(bot):
         order_id = int(call.data.split("_")[1])
         user_id = call.from_user.id
         
-            order = execute_query(
-                "SELECT quantity, size FROM orders WHERE id = %s AND user_id = %s AND fulfilled = 0",
-                (order_id, user_id), fetch='one'
-            )
-        
-            if not order:
-                bot.answer_callback_query(call.id, "ההזמנה כבר בוטלה או סופקה.")
-                return
-        
-            qty, size = order
-            price = 36 if size == "L" else 39
-            refund = qty * price
-        
-            execute_query("DELETE FROM orders WHERE id = %s", (order_id,))
-            execute_query("UPDATE users SET balance = balance + %s WHERE id = %s", (refund, user_id))
-        
-            log(f"[USER CANCEL] {user_id} ביטל הזמנה #{order_id}, זיכוי {refund} ש\"ח")
-        
-            bot.send_message(user_id, f"❌ הזמנתך #{order_id} בוטלה.\n💸 היתרה זוכתה ב־{refund} ש\"ח.")
-
-   
+        order = execute_query(
+            "SELECT quantity, size FROM orders WHERE id = %s AND user_id = %s AND fulfilled = 0",
+            (order_id, user_id), fetch='one'
+        )
     
+        if not order:
+            bot.answer_callback_query(call.id, "ההזמנה כבר בוטלה או סופקה.")
+            return
+    
+        qty, size = order
+        price = 36 if size == "L" else 39
+        refund = qty * price
+    
+        execute_query("DELETE FROM orders WHERE id = %s", (order_id,))
+        execute_query("UPDATE users SET balance = balance + %s WHERE id = %s", (refund, user_id))
+    
+        log(f"[USER CANCEL] {user_id} ביטל הזמנה #{order_id}, זיכוי {refund} ש\"ח")
+    
+        bot.send_message(user_id, f"❌ הזמנתך #{order_id} בוטלה.\n💸 היתרה זוכתה ב־{refund} ש\"ח.")
+
+
+
     @bot.message_handler(func=lambda m: m.text == "הזמנת תבניות")
     def order_eggs(message):
         markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
