@@ -10,43 +10,47 @@ from utils.exception_handler import safe_execution
 from utils.thread_safety import user_lock
 from datetime import datetime
 
-def register(bot):
+def (bot):
 
     @bot.message_handler(commands=['start'])
     @safe_execution("שגיאה בתחילת רישום")
     def start(message):
         user_id = message.from_user.id
         bot.reply_to(message, "ברוך הבא! אנא הזן את שמך:")
-        bot.register_next_step_handler(message, register_user)
+        bot._next_step_handler(message, _user)
 
     @safe_execution("שגיאה ברישום משתמש")
     def register_user(message):
-        name = sanitize_name(message.text)
         user_id = message.from_user.id
-
-        # הוספה ל־users
-        execute_query(
-            "INSERT INTO users (id, name, balance) VALUES (%s, %s, %s) ON CONFLICT (id) DO NOTHING",
-            (user_id, name, 0)
-        )
-
-        # הוספה ל־bit_users
-        execute_query(
-            "INSERT INTO bit_users (user_id, bit_name) VALUES (%s, %s) ON CONFLICT (user_id) DO UPDATE SET bit_name = EXCLUDED.bit_name",
-            (user_id, name)
-        )
-
-        # תפריט מותאם
+        name = sanitize_name(message.text.strip())
+    
+        # 🔁 הכנסת המשתמש עם עדכון שם אם קיים
+        execute_query("""
+            INSERT INTO users (id, name, balance)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name
+        """, (user_id, name, 0))
+    
+        # 🔁 הכנסת או עדכון טבלת bit_users
+        execute_query("""
+            INSERT INTO bit_users (user_id, bit_name)
+            VALUES (%s, %s)
+            ON CONFLICT (user_id) DO UPDATE SET bit_name = EXCLUDED.bit_name
+        """, (user_id, name))
+    
+        # ✅ תפריט מותאם לפי הרשאות
         if is_admin(user_id):
-            bot.send_message(user_id, f"הרשמה הושלמה, {name}!", reply_markup=admin_main_menu())
+            message.bot.send_message(user_id, f"הרשמה הושלמה, {name}!", reply_markup=admin_main_menu())
         else:
-            bot.send_message(user_id, f"הרשמה הושלמה, {name}!", reply_markup=main_menu())
-
-        # הצגת ID
-        bot.send_message(user_id, f"ℹ️ ה־Telegram ID שלך הוא: {user_id}")
-
-        # עדכון למנהל
-        bot.send_message(ADMIN_ID, f"🆕 משתמש חדש נרשם:\nשם: {name}\nID: {user_id}\nנוסף ל־bit_users")
+            message.bot.send_message(user_id, f"הרשמה הושלמה, {name}!", reply_markup=main_menu())
+    
+        # 🆔 הצגת user_id
+        message.bot.send_message(user_id, f"ℹ️ ה־Telegram ID שלך הוא: {user_id}")
+    
+        # 📬 עדכון למנהל
+        if user_id != ADMIN_ID:
+            message.bot.send_message(ADMIN_ID,
+                f"🆕 משתמש חדש נרשם:\nשם: {name}\nID: {user_id}\nעודכן בטבלאות users ו־bit_users")
 
     @bot.message_handler(commands=['menu'])
     def menu(message):
@@ -60,7 +64,7 @@ def register(bot):
         markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
         markup.row(KeyboardButton("L"), KeyboardButton("XL"))
         bot.send_message(message.chat.id, "בחר מידה:", reply_markup=markup)
-        bot.register_next_step_handler(message, lambda msg: ask_quantity_step(msg, msg.text))
+        bot._next_step_handler(message, lambda msg: ask_quantity_step(msg, msg.text))
 
     @safe_execution("שגיאה בבדיקת המידה")
     def ask_quantity_step(message, size):
@@ -71,7 +75,7 @@ def register(bot):
             return
 
         bot.send_message(user_id, f"איזו כמות של תבניות {valid_size} תרצה להזמין?")
-        bot.register_next_step_handler(message, lambda msg: process_order_step(msg, valid_size))
+        bot._next_step_handler(message, lambda msg: process_order_step(msg, valid_size))
 
     @user_lock("order")
     @safe_execution("שגיאה בביצוע ההזמנה")
