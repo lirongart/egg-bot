@@ -109,8 +109,9 @@ def register(bot):
     def order_eggs(message):
         markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
         markup.row(KeyboardButton("L"), KeyboardButton("XL"))
-        bot.send_message(message.chat.id, "בחר מידה:", reply_markup=markup)
-        bot._next_step_handler(message, lambda msg: ask_quantity_step(msg, msg.text))
+        sent = bot.send_message(message.chat.id, "בחר מידה:", reply_markup=markup)
+        bot.register_next_step_handler(sent, lambda msg: ask_quantity_step(msg, msg.text))
+
 
     @safe_execution("שגיאה בבדיקת המידה")
     def ask_quantity_step(message, size):
@@ -119,9 +120,10 @@ def register(bot):
         if not valid_size:
             bot.send_message(user_id, "❌ מידה לא חוקית.\nנא לבחור רק 'L' או 'XL'.", reply_markup=main_menu())
             return
+    
+        sent = bot.send_message(user_id, f"איזו כמות של תבניות {valid_size} תרצה להזמין?")
+        bot.register_next_step_handler(sent, lambda msg: process_order_step(msg, valid_size))
 
-        bot.send_message(user_id, f"איזו כמות של תבניות {valid_size} תרצה להזמין?")
-        bot._next_step_handler(message, lambda msg: process_order_step(msg, valid_size))
 
     @user_lock("order")
     @safe_execution("שגיאה בביצוע ההזמנה")
@@ -130,43 +132,43 @@ def register(bot):
         if quantity is None:
             bot.send_message(message.chat.id, "❌ נא להזין מספר חיובי שלם בלבד.", reply_markup=main_menu())
             return
-
+    
         user_id = message.from_user.id
         user_data = execute_query(
             "SELECT balance, name FROM users WHERE id = %s",
             (user_id,), fetch="one"
         )
-
+    
         if not user_data:
             bot.send_message(user_id, "משתמש לא נמצא.", reply_markup=main_menu())
             return
-
+    
         balance, name = user_data
         price = 36 if size == 'L' else 39
         total = quantity * price
-
+    
         if balance < total:
             bot.send_message(user_id,
                              f"אין לך מספיק יתרה.\nעלות ההזמנה: {total} ש\"ח\nהיתרה שלך: {balance} ש\"ח",
                              reply_markup=main_menu())
             return
-
+    
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
+    
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
                 try:
                     cursor.execute("BEGIN")
-
+    
                     cursor.execute("""
                         INSERT INTO orders (user_id, name, quantity, size, ordered_date)
                         VALUES (%s, %s, %s, %s, %s) RETURNING id
                     """, (user_id, name, quantity, size, now))
                     order_id = cursor.fetchone()[0]
-
+    
                     cursor.execute("UPDATE users SET balance = balance - %s WHERE id = %s", (total, user_id))
                     cursor.execute("COMMIT")
-
+    
                     bot.send_message(user_id,
                                      f"✅ הזמנה #{order_id} התקבלה: {quantity} תבניות מידה {size}\n"
                                      f"💰 חיוב: {total} ש\"ח",
@@ -175,6 +177,7 @@ def register(bot):
                 except Exception as e:
                     cursor.execute("ROLLBACK")
                     raise
+
 
     @bot.message_handler(func=lambda m: m.text == "בדיקת יתרה")
     @user_lock("payment")
