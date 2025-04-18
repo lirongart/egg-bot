@@ -45,16 +45,16 @@ def register(bot):
         # ✏️ הודעה למשתמש אם השם עודכן
         if old_name and old_name != new_name:
             print(f"old={old_name}, new={new_name}")
-            message.bot.send_message(user_id, f"✏️ שמך עודכן מ־{old_name} ל־{new_name}.")
+            bot.send_message(user_id, f"✏️ שמך עודכן מ־{old_name} ל־{new_name}.")
     
         # ✅ תפריט מותאם לפי הרשאות
         if is_admin(user_id):
-            message.bot.send_message(user_id, f"הרשמה או עדכון הושלמו בהצלחה, {new_name}!", reply_markup=admin_main_menu())
+            bot.send_message(user_id, f"הרשמה או עדכון הושלמו בהצלחה, {new_name}!", reply_markup=admin_main_menu())
         else:
-            message.bot.send_message(user_id, f"הרשמה או עדכון הושלמו בהצלחה, {new_name}!", reply_markup=main_menu())
+            bot.send_message(user_id, f"הרשמה או עדכון הושלמו בהצלחה, {new_name}!", reply_markup=main_menu())
     
         # 🆔 הצגת מזהה טלגרם
-        message.bot.send_message(user_id, f"ℹ️ ה־Telegram ID שלך הוא: {user_id}")
+        bot.send_message(user_id, f"ℹ️ ה־Telegram ID שלך הוא: {user_id}")
     
         # 📬 עדכון למנהל
         if user_id != ADMIN_ID:
@@ -63,7 +63,7 @@ def register(bot):
             else:
                 log(f"[USER REGISTER] משתמש חדש: {user_id}, שם: {new_name}", category="admin")
     
-            message.bot.send_message(ADMIN_ID,
+            bot.send_message(ADMIN_ID,
                 f"📬 משתמש {'עודכן' if old_name else 'נרשם'}:\nשם: {new_name}\nID: {user_id}\nעודכן בטבלאות users ו־bit_users")
 
     @bot.message_handler(commands=['menu'])
