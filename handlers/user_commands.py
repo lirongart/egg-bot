@@ -40,17 +40,16 @@ def register(bot):
     
         # ✅ תפריט מותאם לפי הרשאות
         if is_admin(user_id):
-            message.bot.send_message(user_id, f"הרשמה הושלמה, {name}!", reply_markup=admin_main_menu())
+            message.bot.send_message(user_id, f"הרשמה או עדכון הושלמו בהצלחה, {name}!", reply_markup=admin_main_menu())
         else:
-            message.bot.send_message(user_id, f"הרשמה הושלמה, {name}!", reply_markup=main_menu())
+            message.bot.send_message(user_id, f"הרשמה או עדכון הושלמו בהצלחה, {name}!", reply_markup=main_menu())
     
         # 🆔 הצגת user_id
         message.bot.send_message(user_id, f"ℹ️ ה־Telegram ID שלך הוא: {user_id}")
     
         # 📬 עדכון למנהל
         if user_id != ADMIN_ID:
-            message.bot.send_message(ADMIN_ID,
-                f"🆕 משתמש חדש נרשם:\nשם: {name}\nID: {user_id}\nעודכן בטבלאות users ו־bit_users")
+            message.bot.send_message(ADMIN_ID,f"🔄 משתמש נרשם או עודכן:\nשם: {name}\nID: {user_id}\nהמידע הוזן בטבלאות users ו־bit_users")
 
     @bot.message_handler(commands=['menu'])
     def menu(message):
