@@ -17,7 +17,7 @@ def register(bot):
     def start(message):
         user_id = message.from_user.id
         bot.reply_to(message, "ברוך הבא! אנא הזן את שמך:")
-        bot._next_step_handler(message, _user)
+        bot.register_next_step_handler(message, register_user)
 
     @safe_execution("שגיאה ברישום משתמש")
     def register_user(message):
