@@ -25,11 +25,7 @@ def register(bot):
         new_name = sanitize_name(message.text.strip())
     
         # 🎯 שליפת שם קודם מהטבלה (אם קיים)
-        existing = execute_query(
-            "SELECT name FROM users WHERE id = %s",
-            (user_id,),
-            fetch="one"
-        )
+        existing = execute_query("SELECT name FROM users WHERE id = %s",(user_id,),fetch="one")
         old_name = existing[0] if existing else None
     
         # 🔁 הכנסת/עדכון טבלת users
@@ -48,6 +44,7 @@ def register(bot):
     
         # ✏️ הודעה למשתמש אם השם עודכן
         if old_name and old_name != new_name:
+            print(f"old={old_name}, new={new_name}")
             message.bot.send_message(user_id, f"✏️ שמך עודכן מ־{old_name} ל־{new_name}.")
     
         # ✅ תפריט מותאם לפי הרשאות
