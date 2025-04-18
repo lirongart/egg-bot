@@ -94,7 +94,7 @@ def register(bot):
     @user_lock("order")
     @safe_execution("שגיאה בביטול ההזמנה")
     def cancel_selected_order(call):
-        order_id = int(call.data.split("_")[1])
+        order_id = int(call.data.split("_")[2])
         user_id = call.from_user.id
         
         order = execute_query(
