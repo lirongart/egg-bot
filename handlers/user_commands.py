@@ -22,34 +22,52 @@ def register(bot):
     @safe_execution("שגיאה ברישום משתמש")
     def register_user(message):
         user_id = message.from_user.id
-        name = sanitize_name(message.text.strip())
+        new_name = sanitize_name(message.text.strip())
     
-        # 🔁 הכנסת המשתמש עם עדכון שם אם קיים
+        # 🎯 שליפת שם קודם מהטבלה (אם קיים)
+        existing = execute_query(
+            "SELECT name FROM users WHERE id = %s",
+            (user_id,),
+            fetch="one"
+        )
+        old_name = existing[0] if existing else None
+    
+        # 🔁 הכנסת/עדכון טבלת users
         execute_query("""
             INSERT INTO users (id, name, balance)
             VALUES (%s, %s, %s)
             ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name
-        """, (user_id, name, 0))
+        """, (user_id, new_name, 0))
     
-        # 🔁 הכנסת או עדכון טבלת bit_users
+        # 🔁 הכנסת/עדכון טבלת bit_users
         execute_query("""
             INSERT INTO bit_users (user_id, bit_name)
             VALUES (%s, %s)
             ON CONFLICT (user_id) DO UPDATE SET bit_name = EXCLUDED.bit_name
-        """, (user_id, name))
+        """, (user_id, new_name))
+    
+        # ✏️ הודעה למשתמש אם השם עודכן
+        if old_name and old_name != new_name:
+            message.bot.send_message(user_id, f"✏️ שמך עודכן מ־{old_name} ל־{new_name}.")
     
         # ✅ תפריט מותאם לפי הרשאות
         if is_admin(user_id):
-            message.bot.send_message(user_id, f"הרשמה או עדכון הושלמו בהצלחה, {name}!", reply_markup=admin_main_menu())
+            message.bot.send_message(user_id, f"הרשמה או עדכון הושלמו בהצלחה, {new_name}!", reply_markup=admin_main_menu())
         else:
-            message.bot.send_message(user_id, f"הרשמה או עדכון הושלמו בהצלחה, {name}!", reply_markup=main_menu())
+            message.bot.send_message(user_id, f"הרשמה או עדכון הושלמו בהצלחה, {new_name}!", reply_markup=main_menu())
     
-        # 🆔 הצגת user_id
+        # 🆔 הצגת מזהה טלגרם
         message.bot.send_message(user_id, f"ℹ️ ה־Telegram ID שלך הוא: {user_id}")
     
         # 📬 עדכון למנהל
         if user_id != ADMIN_ID:
-            message.bot.send_message(ADMIN_ID,f"🔄 משתמש נרשם או עודכן:\nשם: {name}\nID: {user_id}\nהמידע הוזן בטבלאות users ו־bit_users")
+            if old_name and old_name != new_name:
+                log(f"[USER UPDATE] המשתמש {user_id} עדכן את שמו מ־{old_name} ל־{new_name}", category="admin")
+            else:
+                log(f"[USER REGISTER] משתמש חדש: {user_id}, שם: {new_name}", category="admin")
+    
+            message.bot.send_message(ADMIN_ID,
+                f"📬 משתמש {'עודכן' if old_name else 'נרשם'}:\nשם: {new_name}\nID: {user_id}\nעודכן בטבלאות users ו־bit_users")
 
     @bot.message_handler(commands=['menu'])
     def menu(message):
