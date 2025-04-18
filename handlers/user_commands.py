@@ -87,8 +87,8 @@ def register(bot):
             bot.send_message(user_id, "אין הזמנות ממתינות לביטול.")
             return
     
-        from keyboards.user_cancel_menu import generate_cancel_menu
-        bot.send_message(user_id, "בחר את ההזמנה שברצונך לבטל:", reply_markup=generate_cancel_menu(cursor))
+        from keyboards.user_cancel_menu import build_cancel_menu
+        bot.send_message(user_id, "בחר את ההזמנה שברצונך לבטל:", reply_markup=build_cancel_menu(cursor))
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith("cancel_"))
     @user_lock("order")
