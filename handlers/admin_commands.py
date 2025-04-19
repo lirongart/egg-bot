@@ -50,105 +50,105 @@ def register(bot):
         elif call.data == "cmd_fulfill":
             bot.send_message(call.message.chat.id, "📦 שלח פקודה: /fulfill מספר_הזמנה כמות")
 
-     @bot.message_handler(commands=['fulfill_exact'])
-     @safe_execution("שגיאה באספקה מדויקת")
-     def fulfill_exact(message):
-         if message.from_user.id != ADMIN_ID:
-             return
+    @bot.message_handler(commands=['fulfill_exact'])
+    @safe_execution("שגיאה באספקה מדויקת")
+    def fulfill_exact(message):
+        if message.from_user.id != ADMIN_ID:
+            return
      
-         parts = message.text.split()
-         if len(parts) != 2:
-             bot.send_message(message.chat.id, "⚠️ פורמט שגוי. השתמש:\n/fulfill_exact מספר_הזמנה")
-             return
+        parts = message.text.split()
+        if len(parts) != 2:
+            bot.send_message(message.chat.id, "⚠️ פורמט שגוי. השתמש:\n/fulfill_exact מספר_הזמנה")
+            return
      
-         order_id = int(parts[1])
-         order = execute_query("""
-             SELECT user_id, name, quantity, size FROM orders
-             WHERE id = %s AND fulfilled = 0
-         """, (order_id,), fetch="one")
+        order_id = int(parts[1])
+        order = execute_query("""
+            SELECT user_id, name, quantity, size FROM orders
+            WHERE id = %s AND fulfilled = 0
+        """, (order_id,), fetch="one")
      
-         if not order:
-             bot.send_message(message.chat.id, "❌ ההזמנה לא קיימת או כבר סופקה.")
-             return
+        if not order:
+            bot.send_message(message.chat.id, "❌ ההזמנה לא קיימת או כבר סופקה.")
+            return
      
-         user_id, name, qty, size = order
-         price = 36 if size == 'L' else 39
-         total = qty * price
-         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        user_id, name, qty, size = order
+        price = 36 if size == 'L' else 39
+        total = qty * price
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
      
-         execute_query("""
-             UPDATE orders
-             SET fulfilled = 1,
-                 fulfilled_quantity = %s,
-                 fulfilled_date = %s,
-                 actual_total = %s
-             WHERE id = %s
-         """, (qty, now, total, order_id))
+        execute_query("""
+            UPDATE orders
+            SET fulfilled = 1,
+                fulfilled_quantity = %s,
+                fulfilled_date = %s,
+                actual_total = %s
+            WHERE id = %s
+        """, (qty, now, total, order_id))
      
-         bot.send_message(message.chat.id, f"✅ הזמנה #{order_id} עודכנה כסופקה במדויק.\nחיוב: {total} ש\"ח")
-         bot.send_message(user_id, f"📦 ההזמנה שלך #{order_id} סופקה במלואה ({qty} × {size})\n💰 חיוב: {total} ש\"ח")
+        bot.send_message(message.chat.id, f"✅ הזמנה #{order_id} עודכנה כסופקה במדויק.\nחיוב: {total} ש\"ח")
+        bot.send_message(user_id, f"📦 ההזמנה שלך #{order_id} סופקה במלואה ({qty} × {size})\n💰 חיוב: {total} ש\"ח")
 
-     @bot.message_handler(commands=['fulfill_alt'])
-     @safe_execution("שגיאה באספקה עם מידה שונה")
-     def fulfill_alt(message):
-         if message.from_user.id != ADMIN_ID:
-             return
+    @bot.message_handler(commands=['fulfill_alt'])
+    @safe_execution("שגיאה באספקה עם מידה שונה")
+    def fulfill_alt(message):
+        if message.from_user.id != ADMIN_ID:
+            return
+    
+        parts = message.text.split()
+        if len(parts) != 4:
+            bot.send_message(message.chat.id, "⚠️ פורמט שגוי. השתמש:\n/fulfill_alt מספר_הזמנה מידה_סופקה כמות")
+            return
      
-         parts = message.text.split()
-         if len(parts) != 4:
-             bot.send_message(message.chat.id, "⚠️ פורמט שגוי. השתמש:\n/fulfill_alt מספר_הזמנה מידה_סופקה כמות")
-             return
+        order_id = int(parts[1])
+        actual_size = parts[2].upper()
+        fulfilled_qty = int(parts[3])
      
-         order_id = int(parts[1])
-         actual_size = parts[2].upper()
-         fulfilled_qty = int(parts[3])
+        if actual_size not in ['L', 'XL']:
+            bot.send_message(message.chat.id, "⚠️ מידה לא חוקית. מותר רק L או XL.")
+            return
      
-         if actual_size not in ['L', 'XL']:
-             bot.send_message(message.chat.id, "⚠️ מידה לא חוקית. מותר רק L או XL.")
-             return
+        order = execute_query("""
+            SELECT user_id, name, quantity, size FROM orders
+            WHERE id = %s AND fulfilled = 0
+        """, (order_id,), fetch="one")
      
-         order = execute_query("""
-             SELECT user_id, name, quantity, size FROM orders
-             WHERE id = %s AND fulfilled = 0
-         """, (order_id,), fetch="one")
+        if not order:
+            bot.send_message(message.chat.id, "❌ ההזמנה לא קיימת או כבר סופקה.")
+            return
      
-         if not order:
-             bot.send_message(message.chat.id, "❌ ההזמנה לא קיימת או כבר סופקה.")
-             return
+        user_id, name, ordered_qty, original_size = order
      
-         user_id, name, ordered_qty, original_size = order
+        if fulfilled_qty > ordered_qty:
+            bot.send_message(message.chat.id, f"⚠️ הוזמנו רק {ordered_qty}. לא ניתן לעדכן יותר.")
+            return
      
-         if fulfilled_qty > ordered_qty:
-             bot.send_message(message.chat.id, f"⚠️ הוזמנו רק {ordered_qty}. לא ניתן לעדכן יותר.")
-             return
+        # רק מידה זולה יותר מותרת
+        size_prices = {'L': 36, 'XL': 39}
+        if size_prices[actual_size] > size_prices[original_size]:
+            bot.send_message(message.chat.id, f"❌ לא ניתן לספק מידה יקרה יותר ממה שהוזמן.")
+            return
      
-         # רק מידה זולה יותר מותרת
-         size_prices = {'L': 36, 'XL': 39}
-         if size_prices[actual_size] > size_prices[original_size]:
-             bot.send_message(message.chat.id, f"❌ לא ניתן לספק מידה יקרה יותר ממה שהוזמן.")
-             return
+        actual_total = fulfilled_qty * size_prices[actual_size]
+        refund = (ordered_qty * size_prices[original_size]) - actual_total
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
      
-         actual_total = fulfilled_qty * size_prices[actual_size]
-         refund = (ordered_qty * size_prices[original_size]) - actual_total
-         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        execute_query("""
+            UPDATE orders
+            SET fulfilled = 1,
+                fulfilled_quantity = %s,
+                fulfilled_date = %s,
+                actual_total = %s
+            WHERE id = %s
+        """, (fulfilled_qty, now, actual_total, order_id))
      
-         execute_query("""
-             UPDATE orders
-             SET fulfilled = 1,
-                 fulfilled_quantity = %s,
-                 fulfilled_date = %s,
-                 actual_total = %s
-             WHERE id = %s
-         """, (fulfilled_qty, now, actual_total, order_id))
+        if refund > 0:
+            execute_query("UPDATE users SET balance = balance + %s WHERE id = %s", (refund, user_id))
      
-         if refund > 0:
-             execute_query("UPDATE users SET balance = balance + %s WHERE id = %s", (refund, user_id))
-     
-         bot.send_message(message.chat.id, f"✅ הזמנה #{order_id} עודכנה עם שינוי מידה ({original_size} → {actual_size}).")
-         bot.send_message(user_id,
-             f"📦 ההזמנה שלך #{order_id} עודכנה: {fulfilled_qty} תבניות מידה {actual_size}.\n"
-             f"חיוב בפועל: {actual_total} ש\"ח\n"
-             f"{'💸 זיכוי: ' + str(refund) + ' ש\"ח' if refund > 0 else ''}")
+        bot.send_message(message.chat.id, f"✅ הזמנה #{order_id} עודכנה עם שינוי מידה ({original_size} → {actual_size}).")
+        bot.send_message(user_id,
+            f"📦 ההזמנה שלך #{order_id} עודכנה: {fulfilled_qty} תבניות מידה {actual_size}.\n"
+            f"חיוב בפועל: {actual_total} ש\"ח\n"
+            f"{'💸 זיכוי: ' + str(refund) + ' ש\"ח' if refund > 0 else ''}")
 
      @bot.message_handler(commands=['cancel'])
      @safe_execution("שגיאה בביטול ההזמנה")
