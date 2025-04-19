@@ -29,11 +29,12 @@ def register(bot):
         if message.from_user.id == ADMIN_ID:
             bot.send_message(message.chat.id, "תפריט ניהול:", reply_markup=admin_main_menu())
 
-    # ⬅️ תפריט פקודות נוספות
-    @bot.message_handler(func=lambda m: m.text == "פקודות נוספות" and m.from_user.id == ADMIN_ID)
-    def extra_commands(message):
-          bot.send_message(message.chat.id, "בחר פקודה נוספת:", reply_markup=extra_admin_menu())
-
+     # ⬅️ תפריט פקודות נוספות
+     @bot.message_handler(func=lambda m: m.text == "פקודות נוספות" and m.from_user.id == ADMIN_ID)
+     def extra_commands(message):
+         bot.send_message(message.chat.id, "בחר פקודה נוספת:", reply_markup=extra_admin_menu())
+     
+     # ⬅️ מאזין לכל כפתורי התפריט של "פקודות נוספות"
      @bot.callback_query_handler(func=lambda call: call.data.startswith("cmd_"))
      def handle_admin_inline_cmds(call):
          bot.answer_callback_query(call.id)
@@ -48,7 +49,6 @@ def register(bot):
              bot.send_message(call.message.chat.id, f"🆔 ה־Telegram ID שלך הוא: {call.from_user.id}")
          elif call.data == "cmd_fulfill":
              bot.send_message(call.message.chat.id, "📦 שלח פקודה: /fulfill מספר_הזמנה כמות")
-
 
 
     # ⬅️ הפקדה מ־bit
