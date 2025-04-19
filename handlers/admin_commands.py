@@ -185,61 +185,59 @@ def register(bot):
         bot.send_message(message.chat.id, f"❌ ההזמנה #{order_id} בוטלה.\n💸 היתרה זוכתה ב־{refund} ש\"ח")
         bot.send_message(user_id, f"❌ ההזמנה שלך #{order_id} בוטלה.\n💸 היתרה שלך זוכתה ב־{refund} ש\"ח")
 
-     @bot.message_handler(commands=['fulfill'])
-     @safe_execution("שגיאה בעדכון אספקה")
-     def fulfill_order(message):
-         if message.from_user.id != ADMIN_ID:
-             return
+    @bot.message_handler(commands=['fulfill'])
+    @safe_execution("שגיאה בעדכון אספקה")
+    def fulfill_order(message):
+        if message.from_user.id != ADMIN_ID:
+            return
      
-         parts = message.text.split()
-         if len(parts) != 3:
-             bot.send_message(message.chat.id, "⚠️ פורמט שגוי. השתמש:\n/fulfill מספר_הזמנה כמות_שסופקה")
-             return
+        parts = message.text.split()
+        if len(parts) != 3:
+            bot.send_message(message.chat.id, "⚠️ פורמט שגוי. השתמש:\n/fulfill מספר_הזמנה כמות_שסופקה")
+            return
      
-         order_id = int(parts[1])
-         qty = int(parts[2])
-         if qty < 0:
-             bot.send_message(message.chat.id, "❌ כמות שסופקה לא יכולה להיות שלילית.")
-             return
+        order_id = int(parts[1])
+        qty = int(parts[2])
+        if qty < 0:
+            bot.send_message(message.chat.id, "❌ כמות שסופקה לא יכולה להיות שלילית.")
+            return
      
-         order = execute_query("""
-             SELECT user_id, name, quantity, size FROM orders
-             WHERE id = %s AND fulfilled = 0
-         """, (order_id,), fetch="one")
+        order = execute_query("""
+            SELECT user_id, name, quantity, size FROM orders
+            WHERE id = %s AND fulfilled = 0
+        """, (order_id,), fetch="one")
      
-         if not order:
-             bot.send_message(message.chat.id, "❌ ההזמנה לא קיימת או כבר סופקה.")
-             return
+        if not order:
+            bot.send_message(message.chat.id, "❌ ההזמנה לא קיימת או כבר סופקה.")
+            return
      
-         user_id, name, ordered_qty, size = order
-         if qty > ordered_qty:
-             bot.send_message(message.chat.id, f"⚠️ הוזמנו רק {ordered_qty}. לא ניתן לעדכן יותר.")
-             return
+        user_id, name, ordered_qty, size = order
+        if qty > ordered_qty:
+            bot.send_message(message.chat.id, f"⚠️ הוזמנו רק {ordered_qty}. לא ניתן לעדכן יותר.")
+            return
      
-         price = 36 if size == 'L' else 39
-         actual_total = qty * price
-         refund = (ordered_qty - qty) * price
-         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        price = 36 if size == 'L' else 39
+        actual_total = qty * price
+        refund = (ordered_qty - qty) * price
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
      
-         execute_query("""
-             UPDATE orders SET fulfilled = 1,
-                               fulfilled_quantity = %s,
-                               fulfilled_date = %s,
-                               actual_total = %s
-             WHERE id = %s
-         """, (qty, now, actual_total, order_id))
+        execute_query("""
+            UPDATE orders SET fulfilled = 1,
+                              fulfilled_quantity = %s,
+                              fulfilled_date = %s,
+                              actual_total = %s
+            WHERE id = %s
+        """, (qty, now, actual_total, order_id))
      
-         if refund > 0:
-             execute_query("UPDATE users SET balance = balance + %s WHERE id = %s", (refund, user_id))
+        if refund > 0:
+            execute_query("UPDATE users SET balance = balance + %s WHERE id = %s", (refund, user_id))
      
-         log(f"[FULFILL] הזמנה #{order_id} סופקה: {qty}/{ordered_qty} ({size}). חיוב: {actual_total} ש\"ח", category="admin")
+        log(f"[FULFILL] הזמנה #{order_id} סופקה: {qty}/{ordered_qty} ({size}). חיוב: {actual_total} ש\"ח", category="admin")
      
-         bot.send_message(message.chat.id, f"✅ הזמנה #{order_id} עודכנה.\nחיוב בפועל: {actual_total} ש\"ח")
-         bot.send_message(user_id,
-             f"📦 ההזמנה שלך #{order_id} סופקה: {qty}/{ordered_qty} ({size})\n"
-             f"💰 חיוב: {actual_total} ש\"ח" + (f"\n💸 זיכוי: {refund} ש\"ח" if refund > 0 else ""))
-
-
+        bot.send_message(message.chat.id, f"✅ הזמנה #{order_id} עודכנה.\nחיוב בפועל: {actual_total} ש\"ח")
+        bot.send_message(user_id,
+            f"📦 ההזמנה שלך #{order_id} סופקה: {qty}/{ordered_qty} ({size})\n"
+            f"💰 חיוב: {actual_total} ש\"ח" + (f"\n💸 זיכוי: {refund} ש\"ח" if refund > 0 else ""))
 
 
     # ⬅️ הפקדה מ־bit
