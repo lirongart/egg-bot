@@ -12,6 +12,17 @@ pending_bit_payment = {}
 
 def register(bot):
 
+     # ⬅️ תפריט בדיקת היתרות הכוללת
+    @bot.message_handler(func=lambda m: m.text == "בדיקת יתרות כוללת" and m.from_user.id == ADMIN_ID)
+    @safe_execution("שגיאה בבדיקת היתרות הכוללת")
+    def check_total_balances(message):
+        total = execute_query("SELECT SUM(balance) FROM users", fetch="one")
+        if total and total[0] is not None:
+            bot.send_message(message.chat.id, f'💼 סך כל היתרות בקופה: {total[0]:.2f} ש"ח')
+        else:
+            bot.send_message(message.chat.id, "לא נמצאו יתרות.")
+
+    
     # ⬅️ תפריט ניהול
     @bot.message_handler(commands=['admin'])
     def admin_entry(message):
