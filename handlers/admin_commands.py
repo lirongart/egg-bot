@@ -146,10 +146,12 @@ def register(bot):
      
         bot.send_message(message.chat.id, f"✅ הזמנה #{order_id} עודכנה עם שינוי מידה ({original_size} → {actual_size}).")
         bot.send_message(user_id,
-            f"📦 ההזמנה שלך #{order_id} סופקה: {qty}/{ordered_qty} תבניות {size}.\n"
-            f"💰 חיוב: {actual_total} ש\"ח" +
-            (f"\n💸 זיכוי: {refund} ש\"ח" if refund > 0 else "")
+            f"📦 ההזמנה שלך #{order_id} סופקה במידה שונה: {size} ➝ {supplied_size}\n"
+            f"🥚 כמות שסופקה: {qty_supplied}/{ordered_qty}\n"
+            f"💰 חיוב בפועל: {actual_total} ש\"ח" +
+            (f"\n💸 זיכוי לחשבונך: {refund} ש\"ח" if refund > 0 else "")
         )
+
 
 
     @bot.message_handler(commands=['cancel'])
