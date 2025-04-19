@@ -34,20 +34,21 @@ def register(bot):
     def extra_commands(message):
           bot.send_message(message.chat.id, "בחר פקודה נוספת:", reply_markup=extra_admin_menu())
 
-    @bot.callback_query_handler(func=lambda call: call.data.startswith("cmd_"))
-    def handle_admin_inline_cmds(call):
-        bot.answer_callback_query(call.id)
-         
-        if call.data == "cmd_fulfill_exact":
+     @bot.callback_query_handler(func=lambda call: call.data.startswith("cmd_"))
+     def handle_admin_inline_cmds(call):
+         bot.answer_callback_query(call.id)
+     
+         if call.data == "cmd_fulfill_exact":
              bot.send_message(call.message.chat.id, "📥 שלח פקודה: /fulfill_exact מספר_הזמנה")
-             elif call.data == "cmd_fulfill_alt":
+         elif call.data == "cmd_fulfill_alt":
              bot.send_message(call.message.chat.id, "🔁 שלח פקודה: /fulfill_alt מספר_הזמנה מידה_סופקה כמות")
-             elif call.data == "cmd_cancel":
+         elif call.data == "cmd_cancel":
              bot.send_message(call.message.chat.id, "❌ שלח פקודה: /cancel מספר_הזמנה")
-             elif call.data == "cmd_me":
+         elif call.data == "cmd_me":
              bot.send_message(call.message.chat.id, f"🆔 ה־Telegram ID שלך הוא: {call.from_user.id}")
-             elif call.data == "cmd_fulfill":
-             bot.send_message(call.message.chat.id, "📦 שלח פקודת /fulfill מספר_הזמנה כמות")
+         elif call.data == "cmd_fulfill":
+             bot.send_message(call.message.chat.id, "📦 שלח פקודה: /fulfill מספר_הזמנה כמות")
+
 
 
     # ⬅️ הפקדה מ־bit
