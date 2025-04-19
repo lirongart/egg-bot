@@ -152,38 +152,38 @@ def register(bot):
         )
 
 
-     @bot.message_handler(commands=['cancel'])
-     @safe_execution("שגיאה בביטול ההזמנה")
-     def cancel_order(message):
-         if message.from_user.id != ADMIN_ID:
-             return
+    @bot.message_handler(commands=['cancel'])
+    @safe_execution("שגיאה בביטול ההזמנה")
+    def cancel_order(message):
+        if message.from_user.id != ADMIN_ID:
+            return
+    
+        parts = message.text.split()
+        if len(parts) != 2:
+            bot.send_message(message.chat.id, "⚠️ פורמט שגוי. השתמש:\n/cancel מספר_הזמנה")
+            return
      
-         parts = message.text.split()
-         if len(parts) != 2:
-             bot.send_message(message.chat.id, "⚠️ פורמט שגוי. השתמש:\n/cancel מספר_הזמנה")
-             return
+        order_id = int(parts[1])
+        order = execute_query(
+            "SELECT user_id, name, quantity, size FROM orders WHERE id = %s AND fulfilled = 0",
+            (order_id,), fetch="one"
+        )
      
-         order_id = int(parts[1])
-         order = execute_query(
-             "SELECT user_id, name, quantity, size FROM orders WHERE id = %s AND fulfilled = 0",
-             (order_id,), fetch="one"
-         )
+        if not order:
+            bot.send_message(message.chat.id, "❌ ההזמנה לא קיימת או כבר בוטלה/סופקה.")
+            return
      
-         if not order:
-             bot.send_message(message.chat.id, "❌ ההזמנה לא קיימת או כבר בוטלה/סופקה.")
-             return
+        user_id, name, quantity, size = order
+        price = 36 if size == 'L' else 39
+        refund = quantity * price
      
-         user_id, name, quantity, size = order
-         price = 36 if size == 'L' else 39
-         refund = quantity * price
+        execute_query("DELETE FROM orders WHERE id = %s", (order_id,))
+        execute_query("UPDATE users SET balance = balance + %s WHERE id = %s", (refund, user_id))
      
-         execute_query("DELETE FROM orders WHERE id = %s", (order_id,))
-         execute_query("UPDATE users SET balance = balance + %s WHERE id = %s", (refund, user_id))
-     
-         log(f"[CANCEL] ההזמנה #{order_id} של {name} בוטלה. זיכוי: {refund} ש\"ח", category="admin")
-     
-         bot.send_message(message.chat.id, f"❌ ההזמנה #{order_id} בוטלה.\n💸 היתרה זוכתה ב־{refund} ש\"ח")
-         bot.send_message(user_id, f"❌ ההזמנה שלך #{order_id} בוטלה.\n💸 היתרה שלך זוכתה ב־{refund} ש\"ח")
+        log(f"[CANCEL] ההזמנה #{order_id} של {name} בוטלה. זיכוי: {refund} ש\"ח", category="admin")
+    
+        bot.send_message(message.chat.id, f"❌ ההזמנה #{order_id} בוטלה.\n💸 היתרה זוכתה ב־{refund} ש\"ח")
+        bot.send_message(user_id, f"❌ ההזמנה שלך #{order_id} בוטלה.\n💸 היתרה שלך זוכתה ב־{refund} ש\"ח")
 
      @bot.message_handler(commands=['fulfill'])
      @safe_execution("שגיאה בעדכון אספקה")
