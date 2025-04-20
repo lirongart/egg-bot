@@ -267,14 +267,7 @@ def register(bot):
         full_name = name_match.group(1).strip()
         bit_url = url_match.group(1)
 
-        # בדיקת bit_alias
-        cursor.execute("""
-             SELECT user_id FROM bit_users
-             WHERE bit_name ILIKE %s OR bit_alias ILIKE %s
-        """, (f"%{full_name}%", f"%{full_name}%"))
-        results = cursor.fetchall()
-
-         
+      
         exists = execute_query("SELECT id FROM bit_transactions WHERE url = %s", (bit_url,), fetch="one")
         if exists:
             bot.send_message(message.chat.id, "⚠️ ההפקדה הזו כבר תועדה.")
