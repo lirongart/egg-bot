@@ -273,11 +273,41 @@ def register(bot):
             bot.send_message(message.chat.id, "⚠️ ההפקדה הזו כבר תועדה.")
             return
 
-        results = execute_query("SELECT user_id, bit_name FROM bit_users WHERE bit_name ILIKE %s",
-                                (f"%{full_name}%",), fetch="all")
-        if not results:
-            bot.send_message(message.chat.id, f"⚠️ לא נמצאו התאמות לשם '{full_name}'.")
+        # 🔍 חיפוש התאמות לפי bit_name או bit_alias
+        results = execute_query("""
+            SELECT user_id, bit_name FROM bit_users
+            WHERE (bit_name ILIKE %s OR bit_alias ILIKE %s)
+        """, (f"%{full_name}%", f"%{full_name}%"), fetch="all")
+          
+        # אם נמצאו התאמות — המשך כרגיל
+        if results:
+            if len(results) > 1:
+                matches = ', '.join(name for _, name in results)
+                bot.send_message(message.chat.id, f"⚠️ נמצאו מספר התאמות: {matches}")
+                return
+            user_id, matched_name = results[0]
+        else:
+            # 🧠 לא נמצאו התאמות — בקשת שיוך ידני מהאדמין
+            candidates = execute_query("""
+                SELECT user_id, bit_name FROM bit_users
+                WHERE bit_alias IS NULL
+            """, fetch="all")
+             
+            if not candidates:
+                bot.send_message(message.chat.id, f"⚠️ אין משתמשים פתוחים לשיוך.")
+                return
+          
+            from keyboards.admin_alias_selector import build_alias_options
+            pending_bit_payment[message.chat.id] = {
+                "amount": amount,
+                "full_name": full_name,
+                "bit_url": bit_url
+            }
+            bot.send_message(message.chat.id,
+                f"⚠️ לא נמצאה התאמה לשם '{full_name}'.\nאנא בחר למי לשייך את השם:",
+                reply_markup=build_alias_options(candidates))
             return
+
         if len(results) > 1:
             matches = ', '.join(name for _, name in results)
             bot.send_message(message.chat.id, f"⚠️ נמצאו מספר התאמות: {matches}")
@@ -299,6 +329,41 @@ def register(bot):
         bot.send_message(message.chat.id, f"✅ ההפקדה עודכנה ({matched_name} - {amount} ש\"ח).")
         log(f"[BIT] {matched_name} → {amount} ש\"ח למשתמש {user_id}", category="bit")
 
+    @bot.callback_query_handler(func=lambda call: call.data.startswith("alias_"))
+    @safe_execution("שגיאה בשיוך שם ל־bit_alias")
+    def handle_alias_selection(call):
+        data = pending_bit_payment.pop(call.message.chat.id, None)
+        if not data:
+            bot.send_message(call.message.chat.id, "⛔ אין פעולה פעילה לשיוך.")
+            return
+     
+        selected_user_id = int(call.data.split("_")[1])
+        amount = data["amount"]
+        full_name = data["full_name"]
+        bit_url = data["bit_url"]
+     
+        # עדכון ה־alias
+        execute_query("""
+            UPDATE bit_users SET bit_alias = %s WHERE user_id = %s
+        """, (full_name, selected_user_id))
+     
+        # עדכון יתרה + לוג
+        now = datetime.now()
+        execute_query("UPDATE users SET balance = balance + %s WHERE id = %s", (amount, selected_user_id))
+        execute_query("""
+            INSERT INTO bit_transactions (user_id, full_name, amount, url, timestamp)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (selected_user_id, full_name, amount, bit_url, now))
+     
+        try:
+            bot.send_message(selected_user_id, f"💰 הופקדו {amount} ש\"ח לחשבונך.")
+        except Exception as e:
+            bot.send_message(call.message.chat.id, f"⚠️ לא ניתן לשלוח למשתמש: {e}")
+    
+        bot.send_message(call.message.chat.id,
+            f"✅ ההפקדה עודכנה בהצלחה!\n🧩 שם '{full_name}' שויך ל־user ID {selected_user_id}")
+        log(f"[BIT MANUAL] שיוך ידני של '{full_name}' למשתמש {selected_user_id} - {amount} ש\"ח", category="bit")
+     
     # ⬅️ סיכום כללי
     @bot.message_handler(func=lambda m: m.text == "סיכום כללי" and m.from_user.id == ADMIN_ID)
     @safe_execution("שגיאה בהפקת סיכום כללי")
