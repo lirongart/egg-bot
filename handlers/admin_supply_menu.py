@@ -5,7 +5,7 @@ from utils.db_utils import execute_query
 from telebot.types import Message, CallbackQuery
 def register(bot):
 
-supply_state = {}
+    supply_state = {}
 
     @bot.callback_query_handler(func=lambda call: call.data == 'cmd_fulfill_partial_menu')
     @admin_only
