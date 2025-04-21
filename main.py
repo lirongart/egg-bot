@@ -1,5 +1,6 @@
-import sys ,os
-sys.path.append('/opt/render/project/src')
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__))))
 import threading
 import logging
 from flask import Flask
