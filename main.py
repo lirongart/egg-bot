@@ -1,11 +1,12 @@
-import sys
-import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__))))
+import sys, os
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+
 import threading
 import logging
 from flask import Flask
 from telebot import TeleBot
 from config import TOKEN
+# ייבוא כל ה־handlers
 from handlers import user_commands, admin_commands, admin_broadcast, admin_supply_menu, admin_fulfill_exact_menu
 
 # === הגדרות לוגים בסיסיות ===
