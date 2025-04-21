@@ -6,7 +6,8 @@ import logging
 from flask import Flask
 from telebot import TeleBot
 from config import TOKEN
-from .utils.decorators import admin_only
+from utils.decorators import admin_only
+from utils.exception_handler import safe_execution
 from handlers import user_commands, admin_commands, admin_broadcast, admin_supply_menu, admin_fulfill_exact_menu
 
 
