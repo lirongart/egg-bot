@@ -49,7 +49,7 @@ def run_bot():
     bot.remove_webhook(drop_pending_updates=True)
     logger.info("🤖 EggBot PRO v2 is starting polling...")
     try:
-        bot.remove_webhook()
+        #bot.remove_webhook()
         bot.infinity_polling(timeout=60, long_polling_timeout=40)
     except Exception as e:
         logger.exception("❌ שגיאה בהפעלת הבוט: %s", e)
