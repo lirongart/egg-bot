@@ -46,6 +46,7 @@ def home():
 import time  # ודא שהשורה הזו למעלה ב-main.py
 
 def run_bot():
+    bot.remove_webhook(drop_pending_updates=True)
     logger.info("🤖 EggBot PRO v2 is starting polling...")
     try:
         bot.remove_webhook()
