@@ -1,5 +1,6 @@
 import sys ,os
-sys.path.append('/opt/render/project/src')import threading
+sys.path.append('/opt/render/project/src')
+import threading
 import logging
 from flask import Flask
 from telebot import TeleBot
