@@ -36,12 +36,25 @@ def home():
     return "✅ EggBot PRO is alive and running!"
 
 # === הפעלת הבוט בלולאה אינסופית בתוך Thread נפרד ===
+# def run_bot():
+#     logger.info("🤖 EggBot PRO v2 is starting polling...")
+#     try:
+#         bot.infinity_polling(timeout=60, long_polling_timeout=40)
+#     except Exception as e:
+#         logger.exception("❌ שגיאה בהפעלת הבוט: %s", e)
+
+import time  # ודא שהשורה הזו למעלה ב-main.py
+
 def run_bot():
     logger.info("🤖 EggBot PRO v2 is starting polling...")
     try:
+        bot.remove_webhook()
         bot.infinity_polling(timeout=60, long_polling_timeout=40)
     except Exception as e:
         logger.exception("❌ שגיאה בהפעלת הבוט: %s", e)
+        time.sleep(15)
+        run_bot()
+
 
 # === נקודת כניסה עיקרית ===
 if __name__ == '__main__':
