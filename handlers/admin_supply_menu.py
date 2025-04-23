@@ -11,3 +11,4 @@ def open_partial_supply_menu(call):
         label = f'#{oid} - {name} ({l}L/{xl}XL)'
         keyboard.add(InlineKeyboardButton(label, callback_data=f'edit_partial_{oid}'))
     bot.edit_message_text('בחר הזמנה לעדכון אספקה חלקית:', call.message.chat.id, call.message.message_id, reply_markup=keyboard)
+#
