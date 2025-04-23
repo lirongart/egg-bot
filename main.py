@@ -1,3 +1,6 @@
+import sys, os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
+
 from flask import Flask
 from telebot import TeleBot
 from config import TOKEN
@@ -5,7 +8,7 @@ from handlers import user_commands, admin_commands, admin_supply_menu
 import threading
 import logging
 import os
-admin_supply_menu.register(bot)
+
 
 # === הגדרות לוגים בסיסיות ===
 logging.basicConfig(
@@ -22,6 +25,7 @@ app = Flask(__name__)
 try:
     user_commands.register(bot)
     admin_commands.register(bot)
+    admin_supply_menu.register(bot)
     logger.info("✅ כל הפקודות נרשמו בהצלחה.")
 except Exception as e:
     logger.exception("❌ שגיאה ברישום פקודות: %s", e)
