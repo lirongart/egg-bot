@@ -1,10 +1,11 @@
 from flask import Flask
 from telebot import TeleBot
 from config import TOKEN
-from handlers import user_commands, admin_commands
+from handlers import user_commands, admin_commands, admin_supply_menu
 import threading
 import logging
 import os
+admin_supply_menu.register(bot)
 
 # === הגדרות לוגים בסיסיות ===
 logging.basicConfig(
