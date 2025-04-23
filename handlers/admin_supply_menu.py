@@ -30,9 +30,9 @@ def register(bot):
     @admin_only
     @safe_execution
     def get_supplied_l(msg: Message):
-    if not msg.text.isdigit():
-        bot.send_message(msg.chat.id, 'נא להזין מספר תקני.')
-        return
+        if not msg.text.isdigit():
+            bot.send_message(msg.chat.id, 'נא להזין מספר תקני.')
+            return
     supply_state[msg.from_user.id]['supplied_l'] = int(msg.text)
     bot.send_message(msg.chat.id, 'הכנס כמה תבניות XL סופקו להזמנה זו:')
 
@@ -40,9 +40,9 @@ def register(bot):
     @admin_only
     @safe_execution
     def get_supplied_xl(msg: Message):
-    if not msg.text.isdigit():
-        bot.send_message(msg.chat.id, 'נא להזין מספר תקני.')
-        return
+        if not msg.text.isdigit():
+            bot.send_message(msg.chat.id, 'נא להזין מספר תקני.')
+            return
 
     state = supply_state.pop(msg.from_user.id)
     supplied_l = state['supplied_l']
