@@ -39,6 +39,7 @@ def home():
 def run_bot():
     logger.info("🤖 EggBot PRO v2 is starting polling...")
     try:
+        bot.remove_webhook()  # ← חובה! רק ככה ניתן להריץ polling בלי 409
         bot.infinity_polling(timeout=60, long_polling_timeout=40)
     except Exception as e:
         logger.exception("❌ שגיאה בהפעלת הבוט: %s", e)
