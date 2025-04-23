@@ -1,6 +1,6 @@
 from telebot.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from utils.db_utils import execute_query
-from utils.decorators import admin_only, safe_execution
+from handlers.utils.decorators import admin_only, safe_execution
 
 supply_state = {}
 
