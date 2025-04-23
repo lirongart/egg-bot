@@ -11,7 +11,7 @@ def register(bot):
     @admin_only
     @safe_execution
     def open_partial_supply_menu(call: CallbackQuery):
-    orders = execute_query("SELECT id, user_id, full_name, quantity_l, quantity_xl FROM orders WHERE status = 'pending'", fetch=True)
+        orders = execute_query("SELECT id, user_id, full_name, quantity_l, quantity_xl FROM orders WHERE status = 'pending'", fetch=True)
     if not orders:
         bot.answer_callback_query(call.id, 'אין הזמנות פתוחות כרגע.')
         return
@@ -23,8 +23,8 @@ def register(bot):
     @safe_execution
     def prompt_supply_input(call: CallbackQuery):
     order_id = int(call.data.split('_')[-1])
-    supply_state[call.from_user.id] = {'order_id': order_id}
-    bot.send_message(call.message.chat.id, 'הכנס כמה תבניות L סופקו בפועל להזמנה זו:')
+        supply_state[call.from_user.id] = {'order_id': order_id}
+        bot.send_message(call.message.chat.id, 'הכנס כמה תבניות L סופקו בפועל להזמנה זו:')
 
     @bot.message_handler(func=lambda msg: supply_state.get(msg.from_user.id, {}).get('order_id') and 'supplied_l' not in supply_state[msg.from_user.id])
     @admin_only
