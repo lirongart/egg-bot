@@ -22,7 +22,7 @@ def register(bot):
     @admin_only
     @safe_execution
     def prompt_supply_input(call: CallbackQuery):
-    order_id = int(call.data.split('_')[-1])
+        order_id = int(call.data.split('_')[-1])
         supply_state[call.from_user.id] = {'order_id': order_id}
         bot.send_message(call.message.chat.id, 'הכנס כמה תבניות L סופקו בפועל להזמנה זו:')
 
