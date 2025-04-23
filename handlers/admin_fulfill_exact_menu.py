@@ -9,7 +9,7 @@ def register(bot):
     @admin_only
     @safe_execution
     def open_exact_fulfill_menu(call: CallbackQuery):
-    orders = execute_query("SELECT id, user_id, full_name, quantity_l, quantity_xl FROM orders WHERE status = 'pending'", fetch=True)
+        orders = execute_query("SELECT id, user_id, full_name, quantity_l, quantity_xl FROM orders WHERE status = 'pending'", fetch=True)
     if not orders:
         bot.answer_callback_query(call.id, 'אין הזמנות פתוחות כרגע.')
         return
@@ -20,7 +20,7 @@ def register(bot):
     @admin_only
     @safe_execution
     def mark_as_fulfilled_exact(call: CallbackQuery):
-    order_id = int(call.data.split('_')[-1])
+        order_id = int(call.data.split('_')[-1])
 
     # שליפת הכמויות המקוריות
     res = execute_query("SELECT quantity_l, quantity_xl FROM orders WHERE id = %s", (order_id,), fetch=True)
