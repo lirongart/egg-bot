@@ -2,6 +2,7 @@ from config import ADMIN_ID
 from keyboards.admin_menu import admin_main_menu
 from keyboards.extra_admin_reply import extra_admin_reply_menu
 from keyboards.extra_admin import extra_admin_menu
+from keyboards.extra_admin_reply import extra_admin_reply_menu
 from utils.logger import log
 from utils.db_utils import execute_query
 from utils.thread_safety import user_lock, global_lock
@@ -66,21 +67,37 @@ def register(bot):
             bot.send_message(message.chat.id, "💬 הקלד את ההודעה שברצונך לשלוח לכל המשתמשים:")
             pending_broadcast[message.chat.id] = True
 
-    # ⬅️ מאזין לכל כפתורי התפריט של "פקודות נוספות"
-    @bot.callback_query_handler(func=lambda call: call.data.startswith("cmd_"))
-    def handle_admin_inline_cmds(call):
-        bot.answer_callback_query(call.id)
+    pending_broadcast = {}
+    @bot.message_handler(func=lambda m: pending_broadcast.get(m.chat.id) and m.from_user.id == ADMIN_ID)
+	def do_broadcast(message):
+	    pending_broadcast.pop(message.chat.id, None)
+	    text = message.text
+	    users = execute_query("SELECT telegram_id FROM users", fetch=True)
+	    sent = 0
+	    for uid, in users:
+	        try:
+	            bot.send_message(uid, text)
+	            sent += 1
+	        except:
+	            pass
+	    bot.send_message(message.chat.id, f"✅ ההודעה נשלחה ל-{sent} משתמשים.")
+
+
+    # # ⬅️ מאזין לכל כפתורי התפריט של "פקודות נוספות"
+    # @bot.callback_query_handler(func=lambda call: call.data.startswith("cmd_"))
+    # def handle_admin_inline_cmds(call):
+    #     bot.answer_callback_query(call.id)
      
-        if call.data == "cmd_fulfill_exact":
-            bot.send_message(call.message.chat.id, "📥 שלח פקודה: /fulfill_exact מספר_הזמנה")
-        elif call.data == "cmd_fulfill_alt":
-            bot.send_message(call.message.chat.id, "🔁 שלח פקודה: /fulfill_alt מספר_הזמנה מידה_סופקה כמות")
-        elif call.data == "cmd_cancel":
-            bot.send_message(call.message.chat.id, "❌ שלח פקודה: /cancel מספר_הזמנה")
-        elif call.data == "cmd_me":
-            bot.send_message(call.message.chat.id, f"🆔 ה־Telegram ID שלך הוא: {call.from_user.id}")
-        elif call.data == "cmd_fulfill":
-            bot.send_message(call.message.chat.id, "📦 שלח פקודה: /fulfill מספר_הזמנה כמות")
+    #     if call.data == "cmd_fulfill_exact":
+    #         bot.send_message(call.message.chat.id, "📥 שלח פקודה: /fulfill_exact מספר_הזמנה")
+    #     elif call.data == "cmd_fulfill_alt":
+    #         bot.send_message(call.message.chat.id, "🔁 שלח פקודה: /fulfill_alt מספר_הזמנה מידה_סופקה כמות")
+    #     elif call.data == "cmd_cancel":
+    #         bot.send_message(call.message.chat.id, "❌ שלח פקודה: /cancel מספר_הזמנה")
+    #     elif call.data == "cmd_me":
+    #         bot.send_message(call.message.chat.id, f"🆔 ה־Telegram ID שלך הוא: {call.from_user.id}")
+    #     elif call.data == "cmd_fulfill":
+    #         bot.send_message(call.message.chat.id, "📦 שלח פקודה: /fulfill מספר_הזמנה כמות")
 
     @bot.message_handler(commands=['fulfill_exact'])
     @safe_execution("שגיאה באספקה מדויקת")
