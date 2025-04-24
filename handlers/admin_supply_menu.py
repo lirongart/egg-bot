@@ -19,7 +19,7 @@ def register(bot):
                 SELECT id, user_id, name, quantity_l, quantity_xl
                 FROM orders
                 WHERE fulfilled = 0
-            """, fetch=True)
+            """, fetch="all")
     
             if not orders:
                 bot.send_message(chat_id, "אין הזמנות פתוחות כרגע.")
