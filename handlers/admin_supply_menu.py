@@ -26,7 +26,7 @@ def register(bot):
             orders = execute_query("""
                 SELECT id, user_id, name, quantity_l, quantity_xl
                 FROM orders
-                WHERE status = 'pending'
+                WHERE fulfilled = 0
             """, fetch=True)
 
             if not orders:
