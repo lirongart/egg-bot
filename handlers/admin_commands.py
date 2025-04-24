@@ -79,20 +79,20 @@ def register(bot):
             bot.send_message(message.chat.id, "💬 הקלד את ההודעה שברצונך לשלוח לכל המשתמשים:")
             pending_broadcast[message.chat.id] = True
 
-	    pending_broadcast = {}
-	    @bot.message_handler(func=lambda m: pending_broadcast.get(m.chat.id) and m.from_user.id == ADMIN_ID)
-		def do_broadcast(message):
-		    pending_broadcast.pop(message.chat.id, None)
-		    text = message.text
-		    users = execute_query("SELECT telegram_id FROM users", fetch=True)
-		    sent = 0
-		    for uid, in users:
-		        try:
-		            bot.send_message(uid, text)
-		            sent += 1
-		        except:
-		            pass
-		    bot.send_message(message.chat.id, f"✅ ההודעה נשלחה ל-{sent} משתמשים.")
+        pending_broadcast = {}
+        @bot.message_handler(func=lambda m: pending_broadcast.get(m.chat.id) and m.from_user.id == ADMIN_ID)
+        def do_broadcast(message):
+            pending_broadcast.pop(message.chat.id, None)
+            text = message.text
+            users = execute_query("SELECT telegram_id FROM users", fetch=True)
+            sent = 0
+            for uid, in users:
+                try:
+                    bot.send_message(uid, text)
+                    sent += 1
+                except:
+                    pass
+            bot.send_message(message.chat.id, f"✅ ההודעה נשלחה ל-{sent} משתמשים.")
 
 
     # # ⬅️ מאזין לכל כפתורי התפריט של "פקודות נוספות"
