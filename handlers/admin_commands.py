@@ -21,9 +21,9 @@ def register(bot):
 	    bot.send_message(message.chat.id,
 			     "📥 בחר הזמנה לעדכון אספקה חלקית:",
 			     reply_markup=None)
-
+		admin_supply_menu.register.open_partial_supply_menu(message)
     # קורא לפונקציה הגמישה (Message או CallbackQuery) שהגדרנו ב-admin_supply_menu
-    admin_supply_menu.register.open_partial_supply_menu(message)
+    	
 
 	
      # ⬅️ תפריט בדיקת היתרות הכוללת
