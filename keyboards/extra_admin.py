@@ -1,13 +1,14 @@
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+# keyboards/extra_admin_reply.py
+from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 
-def extra_admin_menu():
-    markup = InlineKeyboardMarkup()
+def extra_admin_reply_menu():
+    markup = ReplyKeyboardMarkup(resize_keyboard=True)
     markup.row(
-        InlineKeyboardButton("📦 אספקה מדויקת", callback_data="cmd_fulfill_exact"),
-        InlineKeyboardButton("אספקה שונה", callback_data="cmd_fulfill_partial_menu")  # ← זה השם החדש
+        KeyboardButton("📦 אספקה מדויקת"),
+        KeyboardButton("🔄 אספקה שונה")
     )
     markup.row(
-        InlineKeyboardButton("❌ ביטול הזמנה", callback_data="cmd_cancel"),
-        InlineKeyboardButton("🆔 מה ה־ID שלי?", callback_data="cmd_me")
+        KeyboardButton("📢 שלח הודעה לכולם"),
+        KeyboardButton("↩️ חזור לתפריט ראשי")
     )
     return markup
