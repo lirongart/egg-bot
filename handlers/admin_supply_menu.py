@@ -24,7 +24,7 @@ def register(bot):
                 bot.answer_callback_query(obj.id)
 
             orders = execute_query("""
-                SELECT id, user_id, full_name, quantity_l, quantity_xl
+                SELECT id, user_id, name, quantity_l, quantity_xl
                 FROM orders
                 WHERE status = 'pending'
             """, fetch=True)
