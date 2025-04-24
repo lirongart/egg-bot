@@ -18,7 +18,8 @@ def register(bot):
     @bot.message_handler(func=lambda m: m.text == "🔄 אספקה שונה" and m.from_user.id == ADMIN_ID)
     def trigger_partial_menu(message):
 	    # קודם מנקה את המקלדת כדי שלא נטמיע עוד כפתורים
-	    bot.send_message(message.chat.id,
+	    admin_supply_menu.register.open_partial_supply_menu(message)
+	    #bot.send_message(message.chat.id,
 	     "📥 בחר הזמנה לעדכון אספקה חלקית:",
 	     reply_markup=None)
 	    admin_supply_menu.register.open_partial_supply_menu(message)
