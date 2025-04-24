@@ -11,43 +11,47 @@ def register(bot):
     # ──────────────────────────────────────────────────────────
     def open_partial_supply_menu(obj):
         try:
-            # קביעה האם זה CallbackQuery או Message
-            is_cb = isinstance(obj, CallbackQuery)
-            user_id = obj.from_user.id if is_cb else obj.from_user.id
-            if user_id != ADMIN_ID:
-                return
-
-            chat_id    = obj.message.chat.id if is_cb else obj.chat.id
-            message_id = obj.message.message_id if is_cb else obj.message_id
-
-            if is_cb:                         # השתקת אנימציית "גלגל"
-                bot.answer_callback_query(obj.id)
-
+            is_cb   = isinstance(obj, CallbackQuery)
+            chat_id = obj.message.chat.id if is_cb else obj.chat.id
+    
+            # 1. שליפת ההזמנות (אותו קוד)
             orders = execute_query("""
                 SELECT id, user_id, name, quantity_l, quantity_xl
                 FROM orders
                 WHERE fulfilled = 0
             """, fetch=True)
-
+    
             if not orders:
-                bot.send_message(chat_id, 'אין הזמנות פתוחות כרגע.')
+                bot.send_message(chat_id, "אין הזמנות פתוחות כרגע.")
                 return
-
+    
+            # 2. בניית המקלדת
             markup = InlineKeyboardMarkup()
             for oid, uid, name, l, xl in orders:
                 label = f'#{oid} - {name} ({l}L/{xl}XL)'
                 markup.add(
                     InlineKeyboardButton(label, callback_data=f'partial_order_{oid}')
                 )
-
-            bot.edit_message_text(
-                'בחר הזמנה לעדכון אספקה חלקית:',
-                chat_id, message_id,
-                reply_markup=markup
-            )
+    
+            # 3. שליחת / עריכת הודעה בהתאם לסוג הקריאה
+            if is_cb:
+                bot.answer_callback_query(obj.id)
+                bot.edit_message_text(
+                    "בחר הזמנה לעדכון אספקה חלקית:",
+                    chat_id, obj.message.message_id,
+                    reply_markup=markup
+                )
+            else:
+                bot.send_message(
+                    chat_id,
+                    "בחר הזמנה לעדכון אספקה חלקית:",
+                    reply_markup=markup
+                )
+    
         except Exception as e:
-            print(f'[EXCEPTION] {e}')
-            bot.send_message(chat_id, 'שגיאה בביצוע הפעולה.')
+            print(f"[EXCEPTION] {e}")
+            bot.send_message(chat_id, "שגיאה בביצוע הפעולה.")
+
 
     # ────────────────────────────────
     # 1. לחיצה על כפתור Reply ("אספקה שונה")
