@@ -14,19 +14,19 @@ pending_bit_payment = {}
 
 def register(bot):
 
-	# ⬅️ לחיצה על “🔄 אספקה שונה”
+    # ⬅️ לחיצה על “🔄 אספקה שונה”
     @bot.message_handler(func=lambda m: m.text == "🔄 אספקה שונה" and m.from_user.id == ADMIN_ID)
     def trigger_partial_menu(message):
-	    # קודם מנקה את המקלדת כדי שלא נטמיע עוד כפתורים
-	    admin_supply_menu.register.open_partial_supply_menu(message)
-	    #bot.send_message(message.chat.id,
-	     "📥 בחר הזמנה לעדכון אספקה חלקית:",
-	     reply_markup=None)
-	    admin_supply_menu.register.open_partial_supply_menu(message)
+        # קודם מנקה את המקלדת כדי שלא נטמיע עוד כפתורים
+        admin_supply_menu.register.open_partial_supply_menu(message)
+        #bot.send_message(message.chat.id,
+        "📥 בחר הזמנה לעדכון אספקה חלקית:",
+        reply_markup=None)
+        admin_supply_menu.register.open_partial_supply_menu(message)
     # קורא לפונקציה הגמישה (Message או CallbackQuery) שהגדרנו ב-admin_supply_menu
-    	
-
-	
+        
+    
+    
      # ⬅️ תפריט בדיקת היתרות הכוללת
     @bot.message_handler(func=lambda m: m.text == "בדיקת יתרות כוללת" and m.from_user.id == ADMIN_ID)
     @safe_execution("שגיאה בבדיקת היתרות הכוללת")
