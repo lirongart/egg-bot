@@ -6,26 +6,67 @@ supply_state = {}
 
 def register(bot):
 
-    @bot.callback_query_handler(func=lambda call: call.data == 'cmd_fulfill_partial_menu')
-    def open_partial_supply_menu(call: CallbackQuery):
+    # ──────────────────────────────────────────────────────────
+    # פונקציה גמישה: יכולה לקבל גם Message וגם CallbackQuery
+    # ──────────────────────────────────────────────────────────
+    def open_partial_supply_menu(obj):
         try:
-            print(f'📥 קיבלתי callback: {call.data}')
-            if call.from_user.id != ADMIN_ID:
+            # קביעה האם זה CallbackQuery או Message
+            is_cb = isinstance(obj, CallbackQuery)
+            user_id = obj.from_user.id if is_cb else obj.from_user.id
+            if user_id != ADMIN_ID:
                 return
-            orders = execute_query("SELECT id, user_id, full_name, quantity_l, quantity_xl FROM orders WHERE status = 'pending'", fetch=True)
+
+            chat_id    = obj.message.chat.id if is_cb else obj.chat.id
+            message_id = obj.message.message_id if is_cb else obj.message_id
+
+            if is_cb:                         # השתקת אנימציית "גלגל"
+                bot.answer_callback_query(obj.id)
+
+            orders = execute_query("""
+                SELECT id, user_id, full_name, quantity_l, quantity_xl
+                FROM orders
+                WHERE status = 'pending'
+            """, fetch=True)
+
             if not orders:
-                bot.answer_callback_query(call.id, 'אין הזמנות פתוחות כרגע.')
+                bot.send_message(chat_id, 'אין הזמנות פתוחות כרגע.')
                 return
 
             markup = InlineKeyboardMarkup()
             for oid, uid, name, l, xl in orders:
                 label = f'#{oid} - {name} ({l}L/{xl}XL)'
-                markup.add(InlineKeyboardButton(label, callback_data=f'partial_order_{oid}'))
+                markup.add(
+                    InlineKeyboardButton(label, callback_data=f'partial_order_{oid}')
+                )
 
-            bot.edit_message_text('בחר הזמנה לעדכון אספקה חלקית:', call.message.chat.id, call.message.message_id, reply_markup=markup)
+            bot.edit_message_text(
+                'בחר הזמנה לעדכון אספקה חלקית:',
+                chat_id, message_id,
+                reply_markup=markup
+            )
         except Exception as e:
             print(f'[EXCEPTION] {e}')
-            bot.send_message(call.message.chat.id, 'שגיאה בביצוע הפעולה.')
+            bot.send_message(chat_id, 'שגיאה בביצוע הפעולה.')
+
+    # ────────────────────────────────
+    # 1. לחיצה על כפתור Reply ("אספקה שונה")
+    #    -> admin_commands יקרא לפונקציה הזו עם Message
+    # ────────────────────────────────
+    # (אין כאן decorator כי נזמין אותה ידנית)
+
+    # ────────────────────────────────
+    # 2. לחיצה על כפתור Inline ("cmd_fulfill_partial_menu")
+    #    -> כאן נשאר CallbackQuery קיימת
+    # ────────────────────────────────
+    @bot.callback_query_handler(func=lambda call: call.data == 'cmd_fulfill_partial_menu')
+    def _inline_open_partial(call: CallbackQuery):
+        open_partial_supply_menu(call)   # מעביר CallbackQuery
+
+    # ────────────────────────────────
+    # שאר הפונקציות (prompt_supply_input, get_supplied_l, get_supplied_xl)
+    # נשארות בדיוק כפי שהיו — ללא שינוי
+    # ────────────────────────────────
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith('partial_order_'))
     def prompt_supply_input(call: CallbackQuery):
@@ -87,3 +128,7 @@ def register(bot):
         except Exception as e:
             print(f'[EXCEPTION] {e}')
             bot.send_message(msg.chat.id, 'שגיאה בביצוע הפעולה.')
+
+    # ========== סוף register ==========
+    # ניתן לייצא את open_partial_supply_menu אם תרצה לגשת אליו מבחוץ:
+    register.open_partial_supply_menu = open_partial_supply_menu
