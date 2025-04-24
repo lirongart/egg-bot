@@ -1,7 +1,7 @@
 from flask import Flask
 from telebot import TeleBot
 from config import TOKEN
-from handlers import user_commands, admin_commands, admin_supply_menu
+from handlers import user_commands, admin_commands
 import threading
 import logging
 import os
@@ -21,7 +21,6 @@ app = Flask(__name__)
 try:
     user_commands.register(bot)
     admin_commands.register(bot)
-    admin_supply_menu.register(bot)
     logger.info("✅ כל הפקודות נרשמו בהצלחה.")
 except Exception as e:
     logger.exception("❌ שגיאה ברישום פקודות: %s", e)
