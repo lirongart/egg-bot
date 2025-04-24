@@ -1,6 +1,7 @@
 import sys, os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
 
+import time
 from flask import Flask
 from telebot import TeleBot
 from config import TOKEN
@@ -40,6 +41,7 @@ def run_bot():
     logger.info("🤖 EggBot PRO v2 is starting polling...")
     try:
         bot.remove_webhook()  # ← חובה! רק ככה ניתן להריץ polling בלי 409
+        time.sleep(1)  # ← מנוחה קצרה
         bot.infinity_polling(timeout=60, long_polling_timeout=40)
     except Exception as e:
         logger.exception("❌ שגיאה בהפעלת הבוט: %s", e)
