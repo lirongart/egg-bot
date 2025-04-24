@@ -2,7 +2,7 @@ from config import ADMIN_ID
 from keyboards.admin_menu import admin_main_menu
 from keyboards.extra_admin_reply import extra_admin_reply_menu
 from keyboards.extra_admin import extra_admin_menu
-from keyboards.extra_admin_reply import extra_admin_reply_menu
+from handlers import admin_supply_menu
 from utils.logger import log
 from utils.db_utils import execute_query
 from utils.thread_safety import user_lock, global_lock
@@ -14,6 +14,18 @@ pending_bit_payment = {}
 
 def register(bot):
 
+	# ⬅️ לחיצה על “🔄 אספקה שונה”
+	@bot.message_handler(func=lambda m: m.text == "🔄 אספקה שונה" and m.from_user.id == ADMIN_ID)
+	def trigger_partial_menu(message):
+	    # קודם מנקה את המקלדת כדי שלא נטמיע עוד כפתורים
+	    bot.send_message(message.chat.id,
+	                     "📥 בחר הזמנה לעדכון אספקה חלקית:",
+	                     reply_markup=None)
+
+    # קורא לפונקציה הגמישה (Message או CallbackQuery) שהגדרנו ב-admin_supply_menu
+    admin_supply_menu.register.open_partial_supply_menu(message)
+
+	
      # ⬅️ תפריט בדיקת היתרות הכוללת
     @bot.message_handler(func=lambda m: m.text == "בדיקת יתרות כוללת" and m.from_user.id == ADMIN_ID)
     @safe_execution("שגיאה בבדיקת היתרות הכוללת")
