@@ -1,5 +1,6 @@
 from config import ADMIN_ID
 from keyboards.admin_menu import admin_main_menu
+from keyboards.extra_admin_reply import extra_admin_reply_menu
 from keyboards.extra_admin import extra_admin_menu
 from utils.logger import log
 from utils.db_utils import execute_query
@@ -30,10 +31,41 @@ def register(bot):
             bot.send_message(message.chat.id, "תפריט ניהול:", reply_markup=admin_main_menu())
 
     # ⬅️ תפריט פקודות נוספות
+    # @bot.message_handler(func=lambda m: m.text == "פקודות נוספות" and m.from_user.id == ADMIN_ID)
+    # def extra_commands(message):
+    #     bot.send_message(message.chat.id, "בחר פקודה נוספת:", reply_markup=extra_admin_menu())
+
+    # חזרה לתפריט הראשי
+    @bot.message_handler(func=lambda m: m.text == "↩️ חזור לתפריט ראשי" and m.from_user.id == ADMIN_ID)
+    def back_to_main_menu(message):
+         bot.send_message(message.chat.id, "חזרת לתפריט הראשי.", reply_markup=admin_main_menu())
+
+     # לחיצה על "פקודות נוספות" → מציגה מקלדת Reply החדשה
     @bot.message_handler(func=lambda m: m.text == "פקודות נוספות" and m.from_user.id == ADMIN_ID)
-    def extra_commands(message):
-        bot.send_message(message.chat.id, "בחר פקודה נוספת:", reply_markup=extra_admin_menu())
-     
+    def show_extra_reply_menu(message):
+         bot.send_message(message.chat.id, "בחר פעולה נוספת:", reply_markup=extra_admin_reply_menu())
+
+    # מאזין לכפתורי המקלדת החדשה
+    @bot.message_handler(func=lambda m: m.from_user.id == ADMIN_ID and m.text in
+                     ["📦 אספקה מדויקת", "🔄 אספקה שונה", "📢 שלח הודעה לכולם"])
+    def handle_extra_reply_buttons(message):
+
+        if message.text == "📦 אספקה מדויקת":
+        # מפעיל את הפקודה /fulfill_exact (מוכר מהקוד שלך)
+            bot.send_message(message.chat.id, "📥 שלח פקודה:\n/fulfill_exact מספר_הזמנה")
+
+        elif message.text == "🔄 אספקה שונה":
+        # מפעיל את מודול admin_supply_menu (הממשק החדש שיצרנו)
+            bot.send_message(message.chat.id, "📥 בחר הזמנה לעדכון אספקה חלקית:",
+                         reply_markup=None)   # נקה מקלדת לפני שה-handler שלך יפיק רשימה
+        # קורא ידנית לפונקציה הראשונה במודול:
+            from handlers import admin_supply_menu
+            admin_supply_menu.open_partial_supply_menu(message)  # צריך להתאים את הפונקציה לקבל Message
+
+        elif message.text == "📢 שלח הודעה לכולם":
+            bot.send_message(message.chat.id, "💬 הקלד את ההודעה שברצונך לשלוח לכל המשתמשים:")
+            pending_broadcast[message.chat.id] = True
+
     # ⬅️ מאזין לכל כפתורי התפריט של "פקודות נוספות"
     @bot.callback_query_handler(func=lambda call: call.data.startswith("cmd_"))
     def handle_admin_inline_cmds(call):
