@@ -9,6 +9,7 @@ def register(bot):
     @bot.callback_query_handler(func=lambda call: call.data == 'cmd_fulfill_partial_menu')
     def open_partial_supply_menu(call: CallbackQuery):
         try:
+            print(f'📥 קיבלתי callback: {call.data}')
             if call.from_user.id != ADMIN_ID:
                 return
             orders = execute_query("SELECT id, user_id, full_name, quantity_l, quantity_xl FROM orders WHERE status = 'pending'", fetch=True)
