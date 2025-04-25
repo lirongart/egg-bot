@@ -145,7 +145,9 @@ def register(bot):
 
             bot.send_message(msg.chat.id, f'✅ עודכנה אספקה להזמנה #{order_id}: {supplied_l}L / {supplied_xl}XL')
         except Exception as e:
-            print(f'[EXCEPTION] {e}')
+            print("[EXCEPTION]", repr(e))
+            bot.send_message(chat_id, f"שגיאה גולמית: {e}")
+            #print(f'[EXCEPTION] {e}')
             bot.send_message(msg.chat.id, 'שגיאה בביצוע הפעולה.')
 
     # ========== סוף register ==========
