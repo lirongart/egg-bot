@@ -112,7 +112,7 @@ def register(bot):
             supplied_xl = int(msg.text)
             order_id = state['order_id']
 
-            res = execute_query("SELECT quantity_l, quantity_xl FROM orders WHERE id = %s", (order_id,), fetch=True)
+            res = execute_query("SELECT quantity_l, quantity_xl FROM orders WHERE id = %s", (order_id,), fetch=one)
             if not res:
                 bot.send_message(msg.chat.id, '⚠️ ההזמנה לא נמצאה.')
                 return
