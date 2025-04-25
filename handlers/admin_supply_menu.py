@@ -127,17 +127,18 @@ def register(bot):
             supplied_xl = int(msg.text)
             order_id = state['order_id']
 
-            res = execute_query("SELECT quantity_l, quantity_xl FROM orders WHERE id = %s", (order_id,), fetch="one")
+            res = execute_query(SELECT quantity_l, quantity_xl, quantity, FROM orders WHERE id = %s, (order_id,), fetch="one") 
+            
             if not res:
                 bot.send_message(msg.chat.id, '⚠️ ההזמנה לא נמצאה.')
                 return
 
-            original_l, original_xl = res
+            original_l, original_xl, orig_qty = res
             total_supplied = supplied_l + supplied_xl
-            print(f'{total_supplied}')
-            total_ordered  = original_l + original_xl
-            print(f'{total_ordered}')
-            if total_supplied > total_ordered:
+            #print(f'{total_supplied}')
+            #total_ordered  = original_l + original_xl
+            #print(f'{total_ordered}')
+            if total_supplied > orig_qty:
                 bot.send_message(msg.chat.id, f'❌ הכמות שסופקה ({total_supplied}) חורגת מההזמנה ({total_ordered})')
                 return
 
