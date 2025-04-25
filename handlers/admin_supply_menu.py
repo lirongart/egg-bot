@@ -40,13 +40,13 @@ def register(bot):
                 bot.send_message(chat_id, "אין הזמנות פתוחות כרגע.")
                 return
     
-            # 2. בניית המקלדת
-            markup = InlineKeyboardMarkup()
-            for oid, uid, name, l, xl in orders:
-                label = f'#{oid} - {name} ({l}L/{xl}XL)'
-                markup.add(
-                    InlineKeyboardButton(label, callback_data=f'partial_order_{oid}')
-                )
+            # # 2. בניית המקלדת
+            # markup = InlineKeyboardMarkup()
+            # for oid, uid, name, l, xl in orders:
+            #     label = f'#{oid} - {name} ({l}L/{xl}XL)'
+            #     markup.add(
+            #         InlineKeyboardButton(label, callback_data=f'partial_order_{oid}')
+            #     )
     
             # 3. שליחת / עריכת הודעה בהתאם לסוג הקריאה
             if is_cb:
@@ -127,7 +127,7 @@ def register(bot):
             supplied_xl = int(msg.text)
             order_id = state['order_id']
 
-            res = execute_query("SELECT quantity_l, quantity_xl FROM orders WHERE id = %s", (order_id,), fetch=one)
+            res = execute_query("SELECT quantity_l, quantity_xl FROM orders WHERE id = %s", (order_id,), fetch="one")
             if not res:
                 bot.send_message(msg.chat.id, '⚠️ ההזמנה לא נמצאה.')
                 return
