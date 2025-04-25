@@ -133,8 +133,10 @@ def register(bot):
                 return
 
             original_l, original_xl = res
-            if supplied_l > original_l or supplied_xl > original_xl:
-                bot.send_message(msg.chat.id, f'❌ הכמות שסופקה חורגת מההזמנה ({original_l}L / {original_xl}XL)')
+            total_supplied = supplied_l + supplied_xl
+            total_ordered  = original_l + original_xl
+            if total_supplied > total_ordered:
+                bot.send_message(msg.chat.id, f'❌ הכמות שסופקה ({total_supplied}) חורגת מההזמנה ({total_ordered})')
                 return
 
             execute_query("""
