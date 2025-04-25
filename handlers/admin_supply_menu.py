@@ -16,10 +16,25 @@ def register(bot):
     
             # 1. שליפת ההזמנות (אותו קוד)
             orders = execute_query("""
-                SELECT id, user_id, name, quantity_l, quantity_xl
-                FROM orders
-                WHERE fulfilled = 0
+                    SELECT id, user_id, name,
+                           COALESCE(quantity_l, 0)  AS ql,
+                           COALESCE(quantity_xl, 0) AS qxl,
+                           quantity,
+                           size
+                    FROM orders
+                    WHERE fulfilled = 0
             """, fetch="all")
+            
+            markup = InlineKeyboardMarkup()
+            for oid, uid, name, ql, qxl, qty, size in orders:
+                if ql == 0 and qxl == 0:                # טרם עודכננו ל-L/XL
+                    label = f'#{oid} - {name} ({qty}×{size})'
+                else:                                   # יש כבר L/XL
+                    label = f'#{oid} - {name} ({ql}L / {qxl}XL)'
+                markup.add(
+                    InlineKeyboardButton(label, callback_data=f'partial_order_{oid}')
+                )
+
     
             if not orders:
                 bot.send_message(chat_id, "אין הזמנות פתוחות כרגע.")
@@ -124,7 +139,7 @@ def register(bot):
 
             execute_query("""
                 UPDATE orders 
-                SET supplied_l = %s, supplied_xl = %s, status = 'supplied' 
+                SET supplied_l = %s, supplied_xl = %s, fulfilled=1 
                 WHERE id = %s
             """, (supplied_l, supplied_xl, order_id))
 
