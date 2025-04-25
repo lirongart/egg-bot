@@ -134,7 +134,9 @@ def register(bot):
 
             original_l, original_xl = res
             total_supplied = supplied_l + supplied_xl
+            print(f'{total_supplied}')
             total_ordered  = original_l + original_xl
+            print(f'{total_ordered}')
             if total_supplied > total_ordered:
                 bot.send_message(msg.chat.id, f'❌ הכמות שסופקה ({total_supplied}) חורגת מההזמנה ({total_ordered})')
                 return
