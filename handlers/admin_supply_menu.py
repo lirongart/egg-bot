@@ -23,7 +23,7 @@ def register(bot):
                            size
                     FROM orders
                     WHERE fulfilled = 0
-            """, fetch="one")
+            """, fetch="all")
             
             markup = InlineKeyboardMarkup()
             for oid, uid, name, ql, qxl, qty, size in orders:
