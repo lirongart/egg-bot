@@ -132,7 +132,7 @@ def register(bot):
                 bot.send_message(msg.chat.id, '⚠️ ההזמנה לא נמצאה.')
                 return
 
-            original_l, original_xl = res[0]
+            original_l, original_xl = res
             if supplied_l > original_l or supplied_xl > original_xl:
                 bot.send_message(msg.chat.id, f'❌ הכמות שסופקה חורגת מההזמנה ({original_l}L / {original_xl}XL)')
                 return
@@ -146,7 +146,7 @@ def register(bot):
             bot.send_message(msg.chat.id, f'✅ עודכנה אספקה להזמנה #{order_id}: {supplied_l}L / {supplied_xl}XL')
         except Exception as e:
             print("[EXCEPTION]", repr(e))
-            bot.send_message(chat_id, f"שגיאה גולמית: {e}")
+            bot.send_message(msg.chat_id, f"שגיאה גולמית: {e}")
             #print(f'[EXCEPTION] {e}')
             bot.send_message(msg.chat.id, 'שגיאה בביצוע הפעולה.')
 
